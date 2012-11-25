@@ -19,13 +19,12 @@
  */
 
 #include <stdint.h>
-#include <jni.h>
 #include <android/native_window.h> // requires ndk r5 or newer
 #include <android/native_window_jni.h> // requires ndk r5 or newer
+#include <android/asset_manager_jni.h>
 
 #include "android3d_jni.h"
 #include "Scene.h"
-#include "Utils.h"
 
 static ANativeWindow* gWindow = NULL;
 static android3d::Scene* gScene = NULL;
@@ -66,5 +65,27 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeSetSurface(JNIEn
     }
 
     return;
+}
+
+void JNICALL assetManager(JNIEnv* env, jobject aAssetManager)
+{
+	AAssetManager* mgr = AAssetManager_fromJava(env, aAssetManager);
+	if (mgr == NULL){
+		LOGE("AAssetManager is null.");
+		return;
+	}
+	AAssetDir* rootDir = AAssetManager_openDir(mgr, "");
+	if (rootDir == NULL){
+		LOGE("AAssetDir root is null.");
+		return;
+	}
+	AAsset* aasset = AAssetManager_open(mgr, "test.txt", AASSET_MODE_UNKNOWN);
+	if (aasset == NULL){
+		LOGE("AAssetManager_open failed.");
+		return;
+	}
+
+	const GLuint* content = (GLuint* const)AAsset_getBuffer(aasset);
+	LOGE("file content: %s", content);
 }
 

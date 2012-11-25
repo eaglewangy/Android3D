@@ -21,12 +21,46 @@
 #ifndef ANDROID3D_JNI_H
 #define ANDROID3D_JNI_H
 
+#include "Utils.h"
+
+#include <jni.h>
+
+#ifdef __cplusplus
 extern "C" {
-    JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnCreate(JNIEnv* jenv, jobject obj);
-    JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv* jenv, jobject obj);
-    JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnPause(JNIEnv* jenv, jobject obj);
-    JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnStop(JNIEnv* jenv, jobject obj);
-    JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeSetSurface(JNIEnv* jenv, jobject obj, jobject surface);
+#endif
+
+extern "C" {
+static JavaVM* gJVM = NULL;
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved);
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *jvm, void *reserved);
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnCreate(JNIEnv* jenv, jobject obj);
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv* jenv, jobject obj);
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnPause(JNIEnv* jenv, jobject obj);
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnStop(JNIEnv* jenv, jobject obj);
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeSetSurface(JNIEnv* jenv, jobject obj, jobject surface);
 };
+
+#ifdef __cplusplus
+}
+#endif //
+
+jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
+{
+	JNIEnv *env;
+	jclass cls;
+	gJVM = jvm; /* cache the JavaVM pointer */
+	if (jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK){
+		LOGE("Android3D failed to initialize.");
+		return JNI_ERR; /* JNI version not supported */
+	}
+
+	LOGI("Android3D has been initialized.");
+	return JNI_VERSION_1_4;
+}
+
+void JNICALL JNI_OnUnload(JavaVM *jvm, void *reserved)
+{
+}
 
 #endif // ANDROID3D_JNI_H
