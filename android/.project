@@ -97,4 +97,16 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>include</name>
+			<type>2</type>
+			<location>/home/wyylling/src/Android3D/include</location>
+		</link>
+		<link>
+			<name>native</name>
+			<type>2</type>
+			<location>/home/wyylling/src/Android3D/src</location>
+		</link>
+	</linkedResources>
 </projectDescription>
