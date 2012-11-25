@@ -1,0 +1,27 @@
+LOCAL_PATH := $(call my-dir)
+###########################
+#
+# android3d static library
+#
+###########################
+
+include $(CLEAR_VARS)
+
+#$(info "building android3d library...")
+#$(info $(LOCAL_SRC_FILES))
+
+LOCAL_MODULE := libandroid3d
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
+                    $(LOCAL_PATH)/../../../src/3rdParty/glm
+
+LOCAL_LDLIBS    := -llog -lGLESv2 -landroid -lEGL
+LOCAL_CFLAGS := -DANDROID_NDK -Werror -D GL_GLEXT_PROTOTYPES 
+LOCAL_SRC_FILES := \
+        $(subst $(LOCAL_PATH)/,, \
+        $(wildcard $(LOCAL_PATH)/../../../src/*.cpp)) 
+LOCAL_SRC_FILES += $(subst $(LOCAL_PATH)/,, \
+        $(wildcard $(LOCAL_PATH)/../../../src/math/*.cpp))
+
+include $(BUILD_STATIC_LIBRARY)
+
