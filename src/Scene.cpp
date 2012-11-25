@@ -116,6 +116,12 @@ GLushort indices[] =
 GLfloat gTriangleVertices[] = { 0.5f, 0.0f, 0.0f,
 		-0.5f, 0.0f, 0.0f,
 		0.0f, 0.5f, 0.0f };
+GLfloat texture[] = {
+		0.0f, 0.0f, // TexCoord 0,
+		0.0f, 1.0f, // TexCoord 1
+		1.0f, 1.0f, // TexCoord 2
+		1.0f, 0.0f // TexCoord 3
+		};
 
 Scene::Scene() :
 mDisplay(NULL),
@@ -305,9 +311,9 @@ bool Scene::initialize()
         return false;
     }
 
-    mShaderProgram = android3d::ShaderManager::createProgram(gVertexShader, gFragmentShader);
+    /*mShaderProgram = android3d::ShaderManager::createProgram(gVertexShader, gFragmentShader);
     positionHandle = glGetAttribLocation(mShaderProgram, "vPosition");
-    mMVPMatrixLocation = glGetUniformLocation(mShaderProgram, "u_MVPMatrix");
+    mMVPMatrixLocation = glGetUniformLocation(mShaderProgram, "u_MVPMatrix");*/
 
     glViewport(0, 0, mWidth, mHeight);
 
@@ -316,12 +322,15 @@ bool Scene::initialize()
     Mesh* mesh1 = new Mesh();
     mesh1->setVertices(vertices, sizeof(vertices));
     mesh1->setIndices(indices, sizeof(indices));
+    mesh1->setUvs(texture, sizeof(texture));
     mesh1->setPosition(-3.0f, 5.0f, 0.0f);
     mesh1->setTriangleNums(12);
     addMesh(mesh1);
 
     Mesh* mesh2 = new Mesh();
     mesh2->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
+    mesh2->setScale(3.0f, 3.0f, 3.0f);
+    mesh2->setUvs(texture, sizeof(texture));
     mesh2->setTriangleNums(1);
     addMesh(mesh2);
 

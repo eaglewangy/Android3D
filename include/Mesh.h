@@ -52,14 +52,11 @@ public:
 
 protected:
 	GLfloat* mVertices;
-	GLfloat* mNormals;
 	GLfloat* mUVS;
+
+	GLfloat* mNormals;
 	GLubyte* mColors;
 	GLushort* mIndices;
-	GLfloat* mPosition;
-	GLfloat* mRotate;
-	GLfloat* mScale;
-	GLint    mTextureId;
 	GLint    mTriangleNums;
 	GLboolean   mEnabled;
 	/* private functions */
@@ -69,12 +66,20 @@ protected:
 	glm::mat4 mModelMatrix;
 	glm::vec3* mTanslateVec;
 	glm::vec3* mRotateVec;
+	glm::vec3* mScaleVec;
 	/* vetext position location */
 	GLuint mVetextLocation;
 	/* MVP matrix shader location */
 	GLuint mMVPMatrixLocation;
+	GLuint mTextureLocation;
+	GLuint mSamplerLocation;
 	/* shader program */
 	GLuint mShaderProgram;
+	GLint  mVertextShader;
+	GLint  mFragmentShader;
+	GLuint mTextureId;
+
+	bool mHasInitialized;
 }; //end mesh
 
 } //end namespace

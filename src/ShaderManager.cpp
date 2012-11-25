@@ -52,15 +52,16 @@ GLuint ShaderManager::loadShader(GLenum shaderType, const char* source)
 	return shader;
 }
 
-GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragmentSource)
+GLuint ShaderManager::createProgram(GLint& vetexShader, const char* vertexSource,
+		GLint& fragment, const char* fragmentSource)
 {
 	GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
 	if (!vertexShader) {
 		return 0;
 	}
 
-	GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource);
-	if (!pixelShader) {
+	GLuint fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource);
+	if (!fragmentShader) {
 		return 0;
 	}
 
@@ -68,7 +69,7 @@ GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragme
 	if (program) {
 		glAttachShader(program, vertexShader);
 		checkGlError("glAttachShader");
-		glAttachShader(program, pixelShader);
+		glAttachShader(program, fragmentShader);
 		checkGlError("glAttachShader");
 		glLinkProgram(program);
 		GLint linkStatus = GL_FALSE;

@@ -25,20 +25,27 @@
 
 namespace android3d
 {
+#define TEXCOORD_ARRAY	1
 
 static const char gVertexShader[] =
 		// A constant representing the combined model/view/projection matrix.
 		"uniform mat4 u_MVPMatrix;\n"
+		"attribute vec2 a_texCoord;\n"
+		"varying vec2 v_texCoord;\n"
 
 		"attribute vec4 vPosition;\n"
 		"void main() {\n"
 		"  gl_Position = u_MVPMatrix * vPosition;\n"
+		"  v_texCoord = a_texCoord;\n"
 		"}\n";
 
 static const char gFragmentShader[] =
 		"precision mediump float;\n"
+		"uniform sampler2D s_texture;\n"
+		"varying vec2 v_texCoord;\n"
 		"void main() {\n"
-		"  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+		"  gl_FragColor = texture2D(s_texture, v_texCoord);\n"
+		//"  gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);\n"
 		"}\n";
 
 Mesh::Mesh() :
@@ -47,13 +54,16 @@ mNormals(NULL),
 mUVS(NULL),
 mColors(NULL),
 mIndices(NULL),
-mPosition(NULL),
 mTanslateVec(NULL),
 mRotateVec(NULL),
-mRotate(NULL),
-mScale(NULL),
+mScaleVec(NULL),
 mTextureId(-1),
 mTriangleNums(0),
+mVetextLocation(-1),
+mMVPMatrixLocation(-1),
+mTextureLocation(-1),
+mSamplerLocation(-1),
+mHasInitialized(false),
 mEnabled(GL_FALSE)
 {
 }
@@ -63,13 +73,17 @@ Mesh::~Mesh()
 	FREEANDNULL(mVertices);
 	FREEANDNULL(mTanslateVec);
 	FREEANDNULL(mRotateVec);
+	FREEANDNULL(mScaleVec);
+	FREEANDNULL(mUVS);
+
 	DELETEANDNULL(mNormals, true);
-	DELETEANDNULL(mUVS, true);
 	DELETEANDNULL(mColors, true);
 	FREEANDNULL(mIndices);
-	DELETEANDNULL(mPosition, true);
-	DELETEANDNULL(mRotate, true);
-	DELETEANDNULL(mScale, true);
+
+	glDeleteProgram(mShaderProgram);
+	glDeleteShader(mVertextShader);
+	glDeleteShader(mFragmentShader);
+	glDeleteTextures(1, &mTextureId);
 	LOGI("Delete meshes...");
 }
 
@@ -91,8 +105,8 @@ void Mesh::setNormals(GLfloat* normals, int size)
 
 void Mesh::setUvs(GLfloat* uvs, int size)
 {
-	DELETEANDNULL(mUVS, true);
-	mUVS = new GLfloat[size];
+	FREEANDNULL(mUVS);
+	mUVS = (GLfloat*)malloc(size);
 	memcpy(mUVS, uvs, size);
 }
 
@@ -110,10 +124,6 @@ void Mesh::setTriangleNums(GLint triangleNums)
 
 void Mesh::setPosition(GLfloat x, GLfloat y, GLfloat z)
 {
-	if (mPosition == NULL)
-	{
-		mPosition = new GLfloat(3 * sizeof(GLfloat));
-	}
 	if (mTanslateVec == NULL)
 	{
 		mTanslateVec = new glm::vec3();
@@ -122,17 +132,10 @@ void Mesh::setPosition(GLfloat x, GLfloat y, GLfloat z)
 	mTanslateVec->x = x;
 	mTanslateVec->y = y;
 	mTanslateVec->z = z;
-	mPosition[0] = x;
-	mPosition[1] = y;
-	mPosition[2] = z;
 }
 
 void Mesh::setRotate(GLfloat x, GLfloat y, GLfloat z)
 {
-	if (mRotate == NULL) {
-		mRotate = new GLfloat(3 * sizeof(GLfloat));
-	}
-
 	if (mRotateVec == NULL)
 	{
 		mRotateVec = new glm::vec3();
@@ -140,21 +143,17 @@ void Mesh::setRotate(GLfloat x, GLfloat y, GLfloat z)
 	mRotateVec->x = x;
 	mRotateVec->y = y;
 	mRotateVec->z = z;
-
-	mRotate[0] = x;
-	mRotate[1] = y;
-	mRotate[2] = z;
 }
 
 void Mesh::setScale(GLfloat x, GLfloat y, GLfloat z)
 {
-	if (mScale == NULL) {
-		mScale = new GLfloat(3 * sizeof(GLfloat));
+	if (mScaleVec == NULL)
+	{
+		mScaleVec = new glm::vec3();
 	}
-
-	mScale[0] = x;
-	mScale[1] = y;
-	mScale[2] = z;
+	mScaleVec->x = x;
+	mScaleVec->y = y;
+	mScaleVec->z = z;
 }
 
 void Mesh::setEnabled(GLboolean enabled)
@@ -166,13 +165,26 @@ void Mesh::initGlCmds()
 {
 	mMVPMatrix = Scene::getInstance()->getCamera()->getMVP();
 
-	mShaderProgram = android3d::ShaderManager::createProgram(gVertexShader, gFragmentShader);
+	mShaderProgram = android3d::ShaderManager::createProgram(mVertextShader, gVertexShader,
+			mFragmentShader, gFragmentShader);
+	if (mShaderProgram == 0)
+	{
+		LOGE("In Mesh::initGlCmds() create shader failed.");
+		return;
+	}
 	mMVPMatrixLocation = glGetUniformLocation(mShaderProgram, "u_MVPMatrix");
 	mVetextLocation = glGetAttribLocation(mShaderProgram, "vPosition");
+	mTextureLocation = glGetAttribLocation(mShaderProgram, "a_texCoord");
+	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
 
 	glUseProgram(mShaderProgram);
 	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, mVertices);
 	glEnableVertexAttribArray(mVetextLocation);
+
+	glGenTextures(1, &mTextureId);
+
+	mHasInitialized = true;
+
 }
 
 void Mesh::render()
@@ -180,7 +192,8 @@ void Mesh::render()
 	if (!mEnabled)
 		return;
 
-	initGlCmds();
+    //if (!mHasInitialized)
+		initGlCmds();
 
 	mModelMatrix = glm::mat4(1.0);
 	if (mTanslateVec != NULL)
@@ -196,9 +209,43 @@ void Mesh::render()
 		if (fabs(mRotateVec->z) > ANDROID3D_EPSILON)
 			mModelMatrix = glm::rotate(mModelMatrix, mRotateVec->z, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+	if (mScaleVec != NULL)
+	{
+		mModelMatrix = glm::scale(mModelMatrix, *mScaleVec);
+	}
 
-	//glNormalPointer(GL_FLOAT, 0, mVertices);
-
+    //LOGE("mUVS: %d, textureID: %d", mUVS, mTextureId);
+	if (mUVS != NULL && mTextureId != -1)
+	{
+		int TEX_SIZE = 128;
+		// Creates the data as a 32bits integer array (8bits per component)
+		GLuint* pTexData = new GLuint[TEX_SIZE*TEX_SIZE];
+		for (int i=0; i<TEX_SIZE; i++)
+			for (int j=0; j<TEX_SIZE; j++)
+			{
+				// Fills the data with a fancy pattern
+				GLuint col = (255<<24) + ((255-j*2)<<16) + ((255-i)<<8) + (255-i*2);
+				if ( ((i*j)/8) % 2 ) col = (GLuint) (255<<24) + (255<<16) + (0<<8) + (255);
+				pTexData[j*TEX_SIZE+i] = col;
+			}
+		//glBindTexture(GL_TEXTURE_2D, mTextureId);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, pTexData);
+		// Set the filtering mode
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, mUVS);
+		glEnableVertexAttribArray(mTextureLocation);
+		// Bind the texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, mTextureId);
+		// Set the sampler texture unit to 0
+		glUniform1i(mSamplerLocation, 0);
+		LOGE("Using texture.");
+	}
+	else
+	{
+	   //glDisable(GL_TEXTURE_2D);
+	}
 
 	/*static int count;
 	++count;
@@ -214,8 +261,8 @@ void Mesh::render()
 	else
 	{
 		glDrawArrays(GL_TRIANGLES, 0, mTriangleNums * 3);
-		//LOGE("this %d", mTriangleNums);
 	}
+
 }
 
 }
