@@ -241,6 +241,7 @@ void Mesh::render()
 		// Set the sampler texture unit to 0
 		glUniform1i(mSamplerLocation, 0);
 		LOGE("Using texture.");
+        delete[] pTexData;
 	}
 	else
 	{
