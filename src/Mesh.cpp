@@ -177,10 +177,6 @@ void Mesh::initGlCmds()
 	mTextureLocation = glGetAttribLocation(mShaderProgram, "a_texCoord");
 	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
 
-	glUseProgram(mShaderProgram);
-	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, mVertices);
-	glEnableVertexAttribArray(mVetextLocation);
-
 	glGenTextures(1, &mTextureId);
 
 	mHasInitialized = true;
@@ -192,8 +188,12 @@ void Mesh::render()
 	if (!mEnabled)
 		return;
 
-    //if (!mHasInitialized)
+    if (!mHasInitialized)
 		initGlCmds();
+    
+    glUseProgram(mShaderProgram);
+	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, mVertices);
+	glEnableVertexAttribArray(mVetextLocation);
 
 	mModelMatrix = glm::mat4(1.0);
 	if (mTanslateVec != NULL)
