@@ -78,6 +78,7 @@ protected:
 	GLint  mVertextShader;
 	GLint  mFragmentShader;
 	GLuint mTextureId;
+	GLuint* mTextureData;
 
 	bool mHasInitialized;
 }; //end mesh

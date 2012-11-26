@@ -29,24 +29,33 @@ namespace android3d
 
 static const char gVertexShader[] =
 		// A constant representing the combined model/view/projection matrix.
-		"uniform mat4 u_MVPMatrix;\n"
-		"attribute vec2 a_texCoord;\n"
-		"varying vec2 v_texCoord;\n"
+		"uniform mat4 u_MVPMatrix;               \n"
+		"attribute vec4 vPosition;               \n"
+		"attribute vec2 a_texCoord;              \n"
+		"varying vec2 v_texCoord;                \n"
+		"uniform lowp int u_enableTexture;       \n"
 
-		"attribute vec4 vPosition;\n"
-		"void main() {\n"
+		"void main() {                           \n"
 		"  gl_Position = u_MVPMatrix * vPosition;\n"
-		"  v_texCoord = a_texCoord;\n"
-		"}\n";
+		"  if(u_enableTexture == 1) {            \n"
+		"      v_texCoord = a_texCoord;          \n"
+		"  }                                     \n"
+		"}                                       \n";
 
 static const char gFragmentShader[] =
-		"precision mediump float;\n"
-		"uniform sampler2D s_texture;\n"
-		"varying vec2 v_texCoord;\n"
-		"void main() {\n"
-		"  gl_FragColor = texture2D(s_texture, v_texCoord);\n"
-		//"  gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);\n"
-		"}\n";
+		"precision mediump float;                              \n"
+		"uniform lowp int u_enableTexture;                     \n"
+		"uniform sampler2D s_texture;                          \n"
+		"varying vec2 v_texCoord;                              \n"
+		"void main() {                                         \n"
+		"  if(u_enableTexture == 1) {                          \n"
+		"      gl_FragColor = texture2D(s_texture, v_texCoord);\n"
+		"  }                                                   \n"
+		"  else                                                \n"
+		"  {                                                   \n"
+		"      gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);        \n"
+		"  }                                                   \n"
+		"}                                                     \n";
 
 Mesh::Mesh() :
 mVertices(NULL),
@@ -62,6 +71,7 @@ mTriangleNums(0),
 mVetextLocation(-1),
 mMVPMatrixLocation(-1),
 mTextureLocation(-1),
+mTextureData(NULL),
 mSamplerLocation(-1),
 mHasInitialized(false),
 mEnabled(GL_FALSE)
@@ -71,14 +81,15 @@ mEnabled(GL_FALSE)
 Mesh::~Mesh()
 {
 	FREEANDNULL(mVertices);
+	FREEANDNULL(mIndices);
 	FREEANDNULL(mTanslateVec);
 	FREEANDNULL(mRotateVec);
 	FREEANDNULL(mScaleVec);
 	FREEANDNULL(mUVS);
+	DELETEANDNULL(mTextureData, true);
 
 	DELETEANDNULL(mNormals, true);
 	DELETEANDNULL(mColors, true);
-	FREEANDNULL(mIndices);
 
 	glDeleteProgram(mShaderProgram);
 	glDeleteShader(mVertextShader);
@@ -177,24 +188,6 @@ void Mesh::initGlCmds()
 	mTextureLocation = glGetAttribLocation(mShaderProgram, "a_texCoord");
 	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
 
-	glGenTextures(1, &mTextureId);
-
-	mHasInitialized = true;
-
-}
-
-void Mesh::render()
-{
-	if (!mEnabled)
-		return;
-
-    if (!mHasInitialized)
-		initGlCmds();
-    
-    glUseProgram(mShaderProgram);
-	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, mVertices);
-	glEnableVertexAttribArray(mVetextLocation);
-
 	mModelMatrix = glm::mat4(1.0);
 	if (mTanslateVec != NULL)
 	{
@@ -214,22 +207,21 @@ void Mesh::render()
 		mModelMatrix = glm::scale(mModelMatrix, *mScaleVec);
 	}
 
-    //LOGE("mUVS: %d, textureID: %d", mUVS, mTextureId);
-	if (mUVS != NULL && mTextureId != -1)
+	if (mUVS != NULL)
 	{
+		glGenTextures(1, &mTextureId);
 		int TEX_SIZE = 128;
 		// Creates the data as a 32bits integer array (8bits per component)
-		GLuint* pTexData = new GLuint[TEX_SIZE*TEX_SIZE];
+		mTextureData = new GLuint[TEX_SIZE*TEX_SIZE];
 		for (int i=0; i<TEX_SIZE; i++)
 			for (int j=0; j<TEX_SIZE; j++)
 			{
 				// Fills the data with a fancy pattern
 				GLuint col = (255<<24) + ((255-j*2)<<16) + ((255-i)<<8) + (255-i*2);
 				if ( ((i*j)/8) % 2 ) col = (GLuint) (255<<24) + (255<<16) + (0<<8) + (255);
-				pTexData[j*TEX_SIZE+i] = col;
+				mTextureData[j*TEX_SIZE+i] = col;
 			}
-		//glBindTexture(GL_TEXTURE_2D, mTextureId);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, pTexData);
+
 		// Set the filtering mode
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -240,18 +232,37 @@ void Mesh::render()
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
 		// Set the sampler texture unit to 0
 		glUniform1i(mSamplerLocation, 0);
-		LOGE("Using texture.");
-        delete[] pTexData;
+
 	}
-	else
+
+	mHasInitialized = true;
+
+}
+
+void Mesh::render()
+{
+	if (!mEnabled)
+		return;
+
+	if (!mHasInitialized)
+		initGlCmds();
+
+	glUseProgram(mShaderProgram);
+	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, mVertices);
+	glEnableVertexAttribArray(mVetextLocation);
+
+	if (mTextureId != -1)
 	{
-	   //glDisable(GL_TEXTURE_2D);
+		int TEX_SIZE = 128;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, mTextureData);
+		LOGE("Using texture.");
 	}
 
 	/*static int count;
 	++count;
 	if (count == 1)
-	   printMatrix(const_cast<float*>(glm::value_ptr(camera->getMVP() * mModelMatrix)), 1);*/
+	   printMatrix(const_cast<float*>(glm::value_ptr(camera->getMVP() * mModelMatrix)), 1);
+	*/
 
 	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mMVPMatrix * mModelMatrix));
 
