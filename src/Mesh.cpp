@@ -36,7 +36,7 @@ static const char gVertexShader[] =
 
 		"void main() {                           \n"
 		"  gl_Position = u_MVPMatrix * vPosition;\n"
-		"  if(u_enableTexture == 1) {            \n"
+		"  if(u_enableTexture == 0) {            \n"
 		"      v_texCoord = a_texCoord;          \n"
 		"  }                                     \n"
 		"}                                       \n";
@@ -47,7 +47,7 @@ static const char gFragmentShader[] =
 		"uniform sampler2D s_texture;                          \n"
 		"varying vec2 v_texCoord;                              \n"
 		"void main() {                                         \n"
-		"  if(u_enableTexture == 1) {                          \n"
+		"  if(u_enableTexture == 0) {                          \n"
 		"      gl_FragColor = texture2D(s_texture, v_texCoord);\n"
 		"  }                                                   \n"
 		"  else                                                \n"
@@ -104,6 +104,11 @@ Mesh::~Mesh()
 	glDeleteTextures(1, &mTextureId);
 	// Release Vertex buffer object.
 	glDeleteBuffers(2, mVertexVBO);
+
+	mShaderProgram = 0;
+	mVertexShader = 0;
+	mFragmentShader = 0;
+
 	LOGI("Delete meshes...");
 }
 
@@ -194,6 +199,7 @@ void Mesh::initGlCmds()
 	{
 		mShaderProgram = android3d::ShaderManager::createProgram(mVertexShader, gVertexShader,
 					mFragmentShader, gFragmentShader);
+		LOGE("rendering");
 	}
 	if (mShaderProgram == 0)
 	{
