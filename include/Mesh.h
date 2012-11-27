@@ -48,15 +48,20 @@ public:
 	/**
 	 * Render mesh
 	 */
-	 void render();
+	void render();
 
 protected:
-	GLfloat* mVertices;
+	GLfloat* mVertex;
+	//vertex array size in bytes
+	int mVertexSize;
+	GLushort* mIndex;
+	//vertext array index size in bytes
+	int mIndexSize;
 	GLfloat* mUVS;
 
 	GLfloat* mNormals;
 	GLubyte* mColors;
-	GLushort* mIndices;
+
 	GLint    mTriangleNums;
 	GLboolean   mEnabled;
 	/* private functions */
@@ -74,11 +79,12 @@ protected:
 	GLuint mTextureLocation;
 	GLuint mSamplerLocation;
 	/* shader program */
-	GLuint mShaderProgram;
-	GLint  mVertextShader;
-	GLint  mFragmentShader;
+	static GLuint mShaderProgram;
+	static GLint  mVertexShader;
+	static GLint  mFragmentShader;
 	GLuint mTextureId;
 	GLuint* mTextureData;
+	GLuint mVertexVBO[2];
 
 	bool mHasInitialized;
 }; //end mesh

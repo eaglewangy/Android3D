@@ -25,7 +25,6 @@
 
 namespace android3d
 {
-#define TEXCOORD_ARRAY	1
 
 static const char gVertexShader[] =
 		// A constant representing the combined model/view/projection matrix.
@@ -57,12 +56,19 @@ static const char gFragmentShader[] =
 		"  }                                                   \n"
 		"}                                                     \n";
 
+
+GLuint Mesh::mShaderProgram = 0;
+GLint  Mesh::mVertexShader = 0;
+GLint  Mesh::mFragmentShader = 0;
+
 Mesh::Mesh() :
-mVertices(NULL),
+mVertex(NULL),
+mVertexSize(0),
 mNormals(NULL),
 mUVS(NULL),
 mColors(NULL),
-mIndices(NULL),
+mIndex(NULL),
+mIndexSize(0),
 mTanslateVec(NULL),
 mRotateVec(NULL),
 mScaleVec(NULL),
@@ -76,12 +82,13 @@ mSamplerLocation(-1),
 mHasInitialized(false),
 mEnabled(GL_FALSE)
 {
+	memset(mVertexVBO, 0, sizeof(mVertexVBO));
 }
 
 Mesh::~Mesh()
 {
-	FREEANDNULL(mVertices);
-	FREEANDNULL(mIndices);
+	FREEANDNULL(mVertex);
+	FREEANDNULL(mIndex);
 	FREEANDNULL(mTanslateVec);
 	FREEANDNULL(mRotateVec);
 	FREEANDNULL(mScaleVec);
@@ -92,17 +99,20 @@ Mesh::~Mesh()
 	DELETEANDNULL(mColors, true);
 
 	glDeleteProgram(mShaderProgram);
-	glDeleteShader(mVertextShader);
+	glDeleteShader(mVertexShader);
 	glDeleteShader(mFragmentShader);
 	glDeleteTextures(1, &mTextureId);
+	// Release Vertex buffer object.
+	glDeleteBuffers(2, mVertexVBO);
 	LOGI("Delete meshes...");
 }
 
-void Mesh::setVertices(GLfloat* vertices, int size)
+void Mesh::setVertices(GLfloat* vertex, int size)
 {
-	FREEANDNULL(mVertices);
-	mVertices = (GLfloat*)malloc(size);
-	memcpy(mVertices, vertices, size);
+	FREEANDNULL(mVertex);
+	mVertex = (GLfloat*)malloc(size);
+	memcpy(mVertex, vertex, size);
+	mVertexSize = size;
 
 	setEnabled(GL_TRUE);
 }
@@ -121,11 +131,13 @@ void Mesh::setUvs(GLfloat* uvs, int size)
 	memcpy(mUVS, uvs, size);
 }
 
-void Mesh::setIndices(GLushort* indices, int size)
+void Mesh::setIndices(GLushort* index, int size)
 {
-	FREEANDNULL(mIndices);
-	mIndices = (GLushort*)malloc(size);
-	memcpy(mIndices, indices, size);
+	FREEANDNULL(mIndex);
+	mIndex = (GLushort*)malloc(size);
+	memcpy(mIndex, index, size);
+
+	mIndexSize = size;
 }
 
 void Mesh::setTriangleNums(GLint triangleNums)
@@ -176,8 +188,13 @@ void Mesh::initGlCmds()
 {
 	mMVPMatrix = Scene::getInstance()->getCamera()->getMVP();
 
-	mShaderProgram = android3d::ShaderManager::createProgram(mVertextShader, gVertexShader,
-			mFragmentShader, gFragmentShader);
+	if (mShaderProgram == 0 &&
+		mVertexShader == 0 &&
+		mFragmentShader == 0)
+	{
+		mShaderProgram = android3d::ShaderManager::createProgram(mVertexShader, gVertexShader,
+					mFragmentShader, gFragmentShader);
+	}
 	if (mShaderProgram == 0)
 	{
 		LOGE("In Mesh::initGlCmds() create shader failed.");
@@ -189,6 +206,29 @@ void Mesh::initGlCmds()
 	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
 
 	mModelMatrix = glm::mat4(1.0);
+
+	if (mEnabled)
+	{
+		/*
+		 * mVertextVBO[0] store vertex attribute data.
+		 * mVertextVBO[1] store elements indices.
+		 */
+		glGenBuffers(2, mVertexVBO);
+		// Bind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
+		// Set the buffer's data
+		glBufferData(GL_ARRAY_BUFFER, mVertexSize, mVertex, GL_STATIC_DRAW);
+		// Unbind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	if (mIndex != NULL)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mVertexVBO[1]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndexSize, mIndex, GL_STATIC_DRAW);
+		// Unbind the VBO
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+
 	if (mTanslateVec != NULL)
 	{
 		mModelMatrix = glm::translate(mModelMatrix, *mTanslateVec);
@@ -248,14 +288,15 @@ void Mesh::render()
 		initGlCmds();
 
 	glUseProgram(mShaderProgram);
-	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, mVertices);
+	// Bind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
+	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray(mVetextLocation);
 
 	if (mTextureId != -1)
 	{
 		int TEX_SIZE = 128;
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, mTextureData);
-		LOGE("Using texture.");
 	}
 
 	/*static int count;
@@ -266,14 +307,20 @@ void Mesh::render()
 
 	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mMVPMatrix * mModelMatrix));
 
-	if (mIndices != NULL)
+	if (mIndex != NULL)
 	{
-		glDrawElements(GL_TRIANGLES, mTriangleNums * 3, GL_UNSIGNED_SHORT, mIndices);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mVertexVBO[1]);
+		glDrawElements(GL_TRIANGLES, mTriangleNums * 3, GL_UNSIGNED_SHORT, NULL);
+		// Unbind the VBO
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 	else
 	{
 		glDrawArrays(GL_TRIANGLES, 0, mTriangleNums * 3);
 	}
+
+	// Unbind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }
 
