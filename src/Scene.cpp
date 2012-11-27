@@ -113,9 +113,18 @@ GLushort indices[] =
 		20, 23, 22
 };
 
-GLfloat gTriangleVertices[] = { 0.5f, 0.0f, 0.0f,
+GLfloat gTriangleVertices[] = {
+		0.5f, 0.0f, 0.0f,
 		-0.5f, 0.0f, 0.0f,
-		0.0f, 0.5f, 0.0f };
+		0.0f, 0.5f, 0.0f
+};
+GLubyte gTriangleColors[] = {
+		255, 0, 0 , 0,
+		0, 255, 0, 0,
+		0, 0, 255, 0,
+		0, 0, 0, 0
+};
+
 GLfloat texture[] = {
 		0.0f, 0.0f, // TexCoord 0,
 		0.0f, 1.0f, // TexCoord 1
@@ -322,7 +331,7 @@ bool Scene::initialize()
     Mesh* mesh1 = new Mesh();
     mesh1->setVertices(vertices, sizeof(vertices));
     mesh1->setIndices(indices, sizeof(indices));
-    mesh1->setUvs(texture, sizeof(texture));
+    //mesh1->setUvs(texture, sizeof(texture));
     mesh1->setPosition(-3.0f, 5.0f, 0.0f);
     mesh1->setTriangleNums(12);
     addMesh(mesh1);
@@ -331,6 +340,7 @@ bool Scene::initialize()
     mesh2->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
     mesh2->setScale(3.0f, 3.0f, 3.0f);
     mesh2->setUvs(texture, sizeof(texture));
+    mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
     mesh2->setTriangleNums(1);
     addMesh(mesh2);
 

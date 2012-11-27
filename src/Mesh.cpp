@@ -32,27 +32,30 @@ static const char gVertexShader[] =
 		"attribute vec4 vPosition;               \n"
 		"attribute vec2 a_texCoord;              \n"
 		"varying vec2 v_texCoord;                \n"
+		"attribute vec4 a_vcolor;                \n"
+		"varying vec4 v_color;                   \n"
 		"uniform lowp int u_enableTexture;       \n"
 
 		"void main() {                           \n"
 		"  gl_Position = u_MVPMatrix * vPosition;\n"
-		"  if(u_enableTexture == 0) {            \n"
+		"  if(u_enableTexture == 1) {            \n"
 		"      v_texCoord = a_texCoord;          \n"
 		"  }                                     \n"
+		"  v_color = a_vcolor;                   \n"
 		"}                                       \n";
 
 static const char gFragmentShader[] =
 		"precision mediump float;                              \n"
+		"varying vec4 v_color;                                 \n"
 		"uniform lowp int u_enableTexture;                     \n"
 		"uniform sampler2D s_texture;                          \n"
 		"varying vec2 v_texCoord;                              \n"
 		"void main() {                                         \n"
-		"  if(u_enableTexture == 0) {                          \n"
+		"  if(u_enableTexture == 1) {                          \n"
 		"      gl_FragColor = texture2D(s_texture, v_texCoord);\n"
 		"  }                                                   \n"
-		"  else                                                \n"
-		"  {                                                   \n"
-		"      gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);        \n"
+		"  else{                                               \n"
+		"      gl_FragColor = v_color;        \n"
 		"  }                                                   \n"
 		"}                                                     \n";
 
@@ -77,6 +80,7 @@ mTriangleNums(0),
 mVetextLocation(-1),
 mMVPMatrixLocation(-1),
 mTextureLocation(-1),
+mColorLocation(-1),
 mTextureData(NULL),
 mSamplerLocation(-1),
 mHasInitialized(false),
@@ -102,8 +106,10 @@ Mesh::~Mesh()
 	glDeleteShader(mVertexShader);
 	glDeleteShader(mFragmentShader);
 	glDeleteTextures(1, &mTextureId);
+	mTextureId = -1;
 	// Release Vertex buffer object.
 	glDeleteBuffers(2, mVertexVBO);
+	memset(mVertexVBO, 0, sizeof(mVertexVBO));
 
 	mShaderProgram = 0;
 	mVertexShader = 0;
@@ -184,6 +190,13 @@ void Mesh::setScale(GLfloat x, GLfloat y, GLfloat z)
 	mScaleVec->z = z;
 }
 
+void Mesh::setColors(GLubyte* colors, int size)
+{
+	FREEANDNULL(mColors);
+	mColors = (GLubyte *) malloc(size);
+	memcpy(mColors, colors, size);
+}
+
 void Mesh::setEnabled(GLboolean enabled)
 {
 	mEnabled = enabled;
@@ -199,7 +212,6 @@ void Mesh::initGlCmds()
 	{
 		mShaderProgram = android3d::ShaderManager::createProgram(mVertexShader, gVertexShader,
 					mFragmentShader, gFragmentShader);
-		LOGE("rendering");
 	}
 	if (mShaderProgram == 0)
 	{
@@ -210,6 +222,8 @@ void Mesh::initGlCmds()
 	mVetextLocation = glGetAttribLocation(mShaderProgram, "vPosition");
 	mTextureLocation = glGetAttribLocation(mShaderProgram, "a_texCoord");
 	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
+	mEnableTextureLocation = glGetUniformLocation(mShaderProgram, "u_enableTexture");
+	mColorLocation = glGetAttribLocation(mShaderProgram, "a_vcolor");
 
 	mModelMatrix = glm::mat4(1.0);
 
@@ -276,8 +290,9 @@ void Mesh::initGlCmds()
 		// Bind the texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
-		// Set the sampler texture unit to 0
-		glUniform1i(mSamplerLocation, 0);
+	}
+	if (mColors != NULL)
+	{
 
 	}
 
@@ -299,11 +314,22 @@ void Mesh::render()
 	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray(mVetextLocation);
 
+	glVertexAttribPointer(mColorLocation, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, mColors);
+	glEnableVertexAttribArray(mColorLocation);
+
 	if (mTextureId != -1)
 	{
+		glUniform1i(mEnableTextureLocation, 1);
+		// Set the sampler texture unit to 0
+		glUniform1i(mSamplerLocation, 0);
 		int TEX_SIZE = 128;
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, mTextureData);
 	}
+	else
+	{
+		glUniform1i(mEnableTextureLocation, 0);
+	}
+	//glColorPointer(4, GL_UNSIGNED_BYTE, 0, mColors);
 
 	/*static int count;
 	++count;

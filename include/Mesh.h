@@ -77,7 +77,9 @@ protected:
 	/* MVP matrix shader location */
 	GLuint mMVPMatrixLocation;
 	GLuint mTextureLocation;
+	GLuint mEnableTextureLocation;
 	GLuint mSamplerLocation;
+	GLuint mColorLocation;
 	/* shader program */
 	static GLuint mShaderProgram;
 	static GLint  mVertexShader;
