@@ -35,27 +35,34 @@ static const char gVertexShader[] =
 		"attribute vec4 a_vcolor;                \n"
 		"varying vec4 v_color;                   \n"
 		"uniform lowp int u_enableTexture;       \n"
+		"uniform lowp int u_enableVertexColor;         \n"
 
 		"void main() {                           \n"
 		"  gl_Position = u_MVPMatrix * vPosition;\n"
 		"  if(u_enableTexture == 1) {            \n"
 		"      v_texCoord = a_texCoord;          \n"
 		"  }                                     \n"
-		"  v_color = a_vcolor;                   \n"
+		"  if (u_enableVertexColor == 1){              \n"
+		"      v_color = a_vcolor;               \n"
+		"  }                                     \n"
 		"}                                       \n";
 
 static const char gFragmentShader[] =
 		"precision mediump float;                              \n"
 		"varying vec4 v_color;                                 \n"
 		"uniform lowp int u_enableTexture;                     \n"
+		"uniform lowp int u_enableVertexColor;                       \n"
 		"uniform sampler2D s_texture;                          \n"
 		"varying vec2 v_texCoord;                              \n"
 		"void main() {                                         \n"
-		"  if(u_enableTexture == 1) {                          \n"
+		"  if (u_enableTexture == 1) {                         \n"
 		"      gl_FragColor = texture2D(s_texture, v_texCoord);\n"
 		"  }                                                   \n"
-		"  else{                                               \n"
-		"      gl_FragColor = v_color;        \n"
+		"  else if (u_enableVertexColor == 1) {                \n"
+		"      gl_FragColor = v_color;                         \n"
+		"  }                                                   \n"
+		"  else {                                              \n"
+		"      gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);        \n"
 		"  }                                                   \n"
 		"}                                                     \n";
 
@@ -70,6 +77,9 @@ mVertexSize(0),
 mNormals(NULL),
 mUVS(NULL),
 mColors(NULL),
+mColorSize(0),
+mColorVBO(0),
+mEnableVertexColorLocation(-1),
 mIndex(NULL),
 mIndexSize(0),
 mTanslateVec(NULL),
@@ -80,6 +90,7 @@ mTriangleNums(0),
 mVetextLocation(-1),
 mMVPMatrixLocation(-1),
 mTextureLocation(-1),
+mEnableTextureLocation(-1),
 mColorLocation(-1),
 mTextureData(NULL),
 mSamplerLocation(-1),
@@ -110,10 +121,15 @@ Mesh::~Mesh()
 	// Release Vertex buffer object.
 	glDeleteBuffers(2, mVertexVBO);
 	memset(mVertexVBO, 0, sizeof(mVertexVBO));
+	//Relsase Color buffer object
+	glDeleteBuffers(1, &mColorVBO);
+	mColorVBO = 0;
 
 	mShaderProgram = 0;
 	mVertexShader = 0;
 	mFragmentShader = 0;
+
+	mEnableVertexColorLocation = -1;
 
 	LOGI("Delete meshes...");
 }
@@ -190,11 +206,13 @@ void Mesh::setScale(GLfloat x, GLfloat y, GLfloat z)
 	mScaleVec->z = z;
 }
 
-void Mesh::setColors(GLubyte* colors, int size)
+void Mesh::setColors(GLfloat* colors, int size)
 {
 	FREEANDNULL(mColors);
-	mColors = (GLubyte *) malloc(size);
+	mColors = (GLfloat *) malloc(size);
 	memcpy(mColors, colors, size);
+
+	mColorSize = size;
 }
 
 void Mesh::setEnabled(GLboolean enabled)
@@ -210,8 +228,9 @@ void Mesh::initGlCmds()
 		mVertexShader == 0 &&
 		mFragmentShader == 0)
 	{
-		mShaderProgram = android3d::ShaderManager::createProgram(mVertexShader, gVertexShader,
-					mFragmentShader, gFragmentShader);
+		mShaderProgram = mShaderManager.createProgram(gVertexShader, gFragmentShader);
+		mVertexShader = mShaderManager.getVertexShader();
+		mFragmentShader = mShaderManager.getFragmentShader();
 	}
 	if (mShaderProgram == 0)
 	{
@@ -224,6 +243,7 @@ void Mesh::initGlCmds()
 	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
 	mEnableTextureLocation = glGetUniformLocation(mShaderProgram, "u_enableTexture");
 	mColorLocation = glGetAttribLocation(mShaderProgram, "a_vcolor");
+	mEnableVertexColorLocation = glGetUniformLocation(mShaderProgram, "u_enableVertexColor");
 
 	mModelMatrix = glm::mat4(1.0);
 
@@ -238,6 +258,16 @@ void Mesh::initGlCmds()
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
 		// Set the buffer's data
 		glBufferData(GL_ARRAY_BUFFER, mVertexSize, mVertex, GL_STATIC_DRAW);
+		// Unbind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	if (mColors != NULL)
+	{
+		glGenBuffers(1, &mColorVBO);
+		// Bind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, mColorVBO);
+		// Set the buffer's data
+		glBufferData(GL_ARRAY_BUFFER, mColorSize, mColors, GL_STATIC_DRAW);
 		// Unbind the VBO
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -291,10 +321,6 @@ void Mesh::initGlCmds()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
 	}
-	if (mColors != NULL)
-	{
-
-	}
 
 	mHasInitialized = true;
 
@@ -314,9 +340,6 @@ void Mesh::render()
 	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray(mVetextLocation);
 
-	glVertexAttribPointer(mColorLocation, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, mColors);
-	glEnableVertexAttribArray(mColorLocation);
-
 	if (mTextureId != -1)
 	{
 		glUniform1i(mEnableTextureLocation, 1);
@@ -329,7 +352,20 @@ void Mesh::render()
 	{
 		glUniform1i(mEnableTextureLocation, 0);
 	}
-	//glColorPointer(4, GL_UNSIGNED_BYTE, 0, mColors);
+
+	if (mColors != NULL)
+	{
+		glUniform1i(mEnableVertexColorLocation, 1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, mColorVBO);
+		glVertexAttribPointer(mColorLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+		glEnableVertexAttribArray(mColorLocation);
+	}
+	else
+	{
+		glUniform1i(mEnableVertexColorLocation, 0);
+		glDisableVertexAttribArray(mEnableVertexColorLocation);
+	}
 
 	/*static int count;
 	++count;
@@ -353,7 +389,6 @@ void Mesh::render()
 
 	// Unbind the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 }
 
 }

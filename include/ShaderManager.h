@@ -31,10 +31,15 @@ namespace android3d
 class ShaderManager
 {
 public:
-	static GLuint createProgram(GLint& vetexShader, const char* vertexSource,
-			GLint& fragment, const char* fragmentSource);
+	GLuint createProgram(const char* vertexSource, const char* fragmentSource);
+	GLuint getVertexShader() {return mVetexShader;}
+	GLuint getFragmentShader() {return mFragmentShader;}
+	GLuint getProgram() {return  mProgram;}
 private:
-	static GLuint loadShader(GLenum shaderType, const char* source);
+	GLuint loadShader(GLenum shaderType, const char* source);
+	GLuint mVetexShader;
+	GLuint mFragmentShader;
+	GLuint mProgram;
 };
 
 }//end namespace

@@ -22,6 +22,7 @@
 #define MESH_H_
 
 #include "Scene.h"
+#include "ShaderManager.h"
 
 #include <GLES2/gl2.h>
 
@@ -36,7 +37,7 @@ public:
 	void setVertices(GLfloat* vertices, int size);
 	void setNormals(GLfloat* normals, int size);
 	void setUvs(GLfloat* uvs, int size);
-	void setColors(GLubyte* colors, int size);
+	void setColors(GLfloat* colors, int size);
 	void setIndices(GLushort* indices, int size);
 	void setTextureId(GLint textureId);
 	void setTriangleNums(GLint triangleNums);
@@ -60,7 +61,9 @@ protected:
 	GLfloat* mUVS;
 
 	GLfloat* mNormals;
-	GLubyte* mColors;
+	GLfloat* mColors;
+	int mColorSize;
+	GLuint mEnableVertexColorLocation;
 
 	GLint    mTriangleNums;
 	GLboolean   mEnabled;
@@ -87,6 +90,9 @@ protected:
 	GLuint mTextureId;
 	GLuint* mTextureData;
 	GLuint mVertexVBO[2];
+	GLuint mColorVBO;
+
+	ShaderManager mShaderManager;
 
 	bool mHasInitialized;
 }; //end mesh

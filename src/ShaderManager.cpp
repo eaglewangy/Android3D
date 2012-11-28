@@ -49,13 +49,14 @@ GLuint ShaderManager::loadShader(GLenum shaderType, const char* source)
 			}
 		}
 	}
+
 	return shader;
 }
 
-GLuint ShaderManager::createProgram(GLint& vetexShader, const char* vertexSource,
-		GLint& fragment, const char* fragmentSource)
+GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragmentSource)
 {
 	GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
+	mVetexShader = vertexShader;
 	if (!vertexShader) {
 		return 0;
 	}
@@ -64,6 +65,7 @@ GLuint ShaderManager::createProgram(GLint& vetexShader, const char* vertexSource
 	if (!fragmentShader) {
 		return 0;
 	}
+	mFragmentShader = fragmentShader;
 
 	GLuint program = glCreateProgram();
 	if (program) {
@@ -89,6 +91,7 @@ GLuint ShaderManager::createProgram(GLint& vetexShader, const char* vertexSource
 			program = 0;
 		}
 	}
+	mProgram = program;
 	return program;
 }
 

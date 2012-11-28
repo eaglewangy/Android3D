@@ -34,24 +34,6 @@ namespace android3d
 
 Scene* Scene::mInstance = NULL;
 
-GLuint positionHandle;
-
-static const char gVertexShader[] =
-		// A constant representing the combined model/view/projection matrix.
-		"uniform mat4 u_MVPMatrix;\n"
-
-		"attribute vec4 vPosition;\n"
-		"void main() {\n"
-		"  gl_Position = u_MVPMatrix * vPosition;\n"
-		//"  gl_Position = vPosition;\n"
-		"}\n";
-
-static const char gFragmentShader[] =
-		"precision mediump float;\n"
-		"void main() {\n"
-		"  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
-		"}\n";
-
 GLfloat vertices[] =
 {
 		//front
@@ -118,11 +100,10 @@ GLfloat gTriangleVertices[] = {
 		-0.5f, 0.0f, 0.0f,
 		0.0f, 0.5f, 0.0f
 };
-GLubyte gTriangleColors[] = {
-		255, 0, 0 , 0,
-		0, 255, 0, 0,
-		0, 0, 255, 0,
-		0, 0, 0, 0
+GLfloat gTriangleColors[] = {
+		1.0f, 0.0f, 0.0f , 1.0f,
+		0.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
 };
 
 GLfloat texture[] = {
@@ -279,7 +260,7 @@ bool Scene::initialize()
         LOGE("eglInitialize() returned error %d", eglGetError());
         return false;
     }
-    LOGI("OpenGL ES Version: major:%d, minor: %d", major, minor);
+    LOGI("EGL Version: %d.%d", major, minor);
 
     if (!eglChooseConfig(mDisplay, configAttribs, &config, 1, &numConfigs)) {
         LOGE("eglChooseConfig() returned error %d", eglGetError());
@@ -320,9 +301,11 @@ bool Scene::initialize()
         return false;
     }
 
-    /*mShaderProgram = android3d::ShaderManager::createProgram(gVertexShader, gFragmentShader);
-    positionHandle = glGetAttribLocation(mShaderProgram, "vPosition");
-    mMVPMatrixLocation = glGetUniformLocation(mShaderProgram, "u_MVPMatrix");*/
+    printGLString("Vendor: ", GL_VENDOR);
+    printGLString("Version: ", GL_VERSION);
+    printGLString("Renderer: ", GL_RENDERER);
+    printGLString("Shading Language Version: ", GL_SHADING_LANGUAGE_VERSION);
+    printGLString("Extensions: ", GL_EXTENSIONS);
 
     glViewport(0, 0, mWidth, mHeight);
 
@@ -340,7 +323,7 @@ bool Scene::initialize()
     mesh2->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
     mesh2->setScale(3.0f, 3.0f, 3.0f);
     mesh2->setUvs(texture, sizeof(texture));
-    mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
+    //mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
     mesh2->setTriangleNums(1);
     addMesh(mesh2);
 
@@ -367,11 +350,8 @@ void Scene::destroy() {
 void Scene::drawFrame()
 {
 	glClearColor(0.5f, 0.5f, 0.5f, 1);
-	//LOGE("Renderer::drawFrame()");
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //LOGE("sizeof: %d", sizeof(vertices));
 
     clock_t time = clock() / (CLOCKS_PER_SEC / 1000);
     time = time % 4000L;
