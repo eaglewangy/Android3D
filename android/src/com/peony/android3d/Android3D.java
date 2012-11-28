@@ -20,6 +20,8 @@
 
 package com.peony.android3d;
 
+import com.peony.android3d.util.AssetsUtils;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Surface;
@@ -38,20 +40,22 @@ public class Android3D extends Activity implements SurfaceHolder.Callback {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    	super.onCreate(savedInstanceState);
 
-        Log.i(TAG, "onCreate()");
+    	Log.i(TAG, "onCreate()");
 
-        nativeOnCreate();
-        
-        setContentView(R.layout.main);
-        SurfaceView surfaceView = (SurfaceView)findViewById(R.id.surfaceview);
-        surfaceView.getHolder().addCallback(this);
-        surfaceView.setOnClickListener(new OnClickListener() {
-                public void onClick(View view) {
-                    /*Toast toast = Toast.makeText(Android3D.this, "", Toast.LENGTH_LONG);
+    	nativeOnCreate();
+
+    	setContentView(R.layout.main);
+    	SurfaceView surfaceView = (SurfaceView)findViewById(R.id.surfaceview);
+    	surfaceView.getHolder().addCallback(this);
+    	surfaceView.setOnClickListener(new OnClickListener() {
+    		public void onClick(View view) {
+    			/*Toast toast = Toast.makeText(Android3D.this, "", Toast.LENGTH_LONG);
                     toast.show();*/
-                }});
+    	}});
+    	
+    	AssetsUtils.copyFiles(this);
     }
 
     @Override
