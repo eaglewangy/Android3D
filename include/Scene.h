@@ -107,11 +107,6 @@ private:
 
     Camera* mCamera;
 
-    //MVP matrix shader location
-    GLuint mMVPMatrixLocation;
-    //
-    GLuint mShaderProgram;
-
     std::vector<Mesh*> mMeshes;
 
 };

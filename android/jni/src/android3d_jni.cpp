@@ -25,6 +25,88 @@
 
 #include "android3d_jni.h"
 #include "Scene.h"
+#include "Mesh.h"
+
+/*--------------------------------------Begin test data---------------------------------------*/
+GLfloat vertices[] =
+{
+		//front
+		//0->1->2->3
+		-1.0f, -1.0f,  1.0f, //0
+		1.0f, -1.0f,  1.0f,  //1
+		1.0f,  1.0f,  1.0f,  //2
+		-1.0f,  1.0f,  1.0f, //3
+		//back
+		//4->5->6->7
+		-1.0f,  -1.0f,  -1.0f, //4
+		1.0f,  -1.0f,  -1.0f,  //5
+		1.0f,  1.0f, -1.0f,		//6
+		-1.0f,  1.0f, -1.0f,    //7
+		//left
+		//0->4->7->3
+		-1.0f, -1.0f, 1.0f,    //8
+		-1.0f, -1.0f, -1.0f,   //9
+		-1.0f, 1.0f, -1.0f,    //10
+		-1.0f, 1.0f, 1.0f,     //11
+		//right
+		//1->5->6->2
+		1.0f, -1.0f, 1.0f,     //12
+		1.0f, -1.0f, -1.0f,    //13
+		1.0f, 1.0f, -1.0f,     //14
+		1.0f, 1.0f, 1.0f,      //15
+		//top
+		//3->2->6->7
+		-1.0f, 1.0f, 1.0f,    //16
+		1.0f, 1.0f, 1.0f,     //17
+		1.0f, 1.0f, -1.0f,    //18
+		-1.0f, 1.0f, -1.0f,   //19
+		//bottom
+		//0->1->5->4
+		-1.0f, -1.0f, 1.0f,   //20
+		1.0f, -1.0f, 1.0f,    //21
+		1.0f, -1.0f, -1.0f,   //22
+		-1.0f, -1.0f, -1.0f   //23
+};
+
+GLushort indices[] =
+{
+		0, 1, 2,
+		0, 2, 3,
+
+		4, 6, 5,
+		4, 7, 6,
+
+		8, 11, 10,
+		8, 10, 9,
+
+		12, 14, 15,
+		12, 13, 14,
+
+		16, 17, 18,
+		16, 18, 19,
+
+		20, 22, 21,
+		20, 23, 22
+};
+
+GLfloat gTriangleVertices[] = {
+		0.5f, 0.0f, 0.0f,
+		-0.5f, 0.0f, 0.0f,
+		0.0f, 0.5f, 0.0f
+};
+GLfloat gTriangleColors[] = {
+		1.0f, 0.0f, 0.0f , 1.0f,
+		0.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
+};
+
+GLfloat texture[] = {
+		0.0f, 0.0f, // TexCoord 0,
+		0.0f, 1.0f, // TexCoord 1
+		1.0f, 1.0f, // TexCoord 2
+		1.0f, 0.0f // TexCoord 3
+		};
+/*--------------------------------------End test data---------------------------------------*/
 
 static ANativeWindow* gWindow = NULL;
 static android3d::Scene* gScene = NULL;
@@ -38,6 +120,22 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnCreate(JNIEnv*
 JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv* jenv, jobject obj)
 {
 	gScene->start();
+
+	android3d::Mesh* mesh1 = new android3d::Mesh();
+	mesh1->setVertices(vertices, sizeof(vertices));
+	mesh1->setIndices(indices, sizeof(indices));
+	//mesh1->setUvs(texture, sizeof(texture));
+	mesh1->setPosition(-3.0f, 5.0f, 0.0f);
+	mesh1->setTriangleNums(12);
+	gScene->addMesh(mesh1);
+
+	android3d::Mesh* mesh2 = new android3d::Mesh();
+	mesh2->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
+	mesh2->setScale(3.0f, 3.0f, 3.0f);
+	mesh2->setUvs(texture, sizeof(texture));
+	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
+	mesh2->setTriangleNums(1);
+	gScene->addMesh(mesh2);
     return;
 }
 
