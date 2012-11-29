@@ -22,6 +22,7 @@
 
 #include "android3d.h"
 #include "ShaderManager.h"
+#include "Image.h"
 
 namespace android3d
 {
@@ -321,6 +322,10 @@ void Mesh::initGlCmds()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
 	}
+
+	//std::string texture = Scene::ROOT_PATH + "logo.png";
+	//Image image;
+	//image.read(texture);
 
 	mHasInitialized = true;
 

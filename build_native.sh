@@ -14,6 +14,7 @@ git clone  https://github.com/julienr/libpng-android.git
 
 mkdir libpng
 cp libpng-android/jni/*.c libpng/
+cp libpng-android/jni/*.h libpng/
 rm -rf libpng-android/
 
 popd

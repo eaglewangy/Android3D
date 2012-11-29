@@ -13,8 +13,10 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libandroid3d
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
-                    $(LOCAL_PATH)/../../../src/3rdParty/glm
+                    $(LOCAL_PATH)/../../../src/3rdParty/glm \
+                    $(LOCAL_PATH)/../../../src/3rdParty/libpng \
 
+LOCAL_STATIC_LIBRARIES := png
 LOCAL_LDLIBS    := -llog -lGLESv2 -landroid -lEGL
 LOCAL_CFLAGS := -DANDROID_NDK -Werror -D GL_GLEXT_PROTOTYPES 
 LOCAL_SRC_FILES := \

@@ -11,7 +11,7 @@ LOCAL_CFLAGS := -DANDROID_NDK
 
 LOCAL_SRC_FILES := android3d_jni.cpp
 
-LOCAL_STATIC_LIBRARIES := android3d libzlib
+LOCAL_STATIC_LIBRARIES := android3d
 
 LOCAL_LDLIBS :=  -llog -lGLESv2 -landroid -lEGL
 
