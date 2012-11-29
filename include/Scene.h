@@ -35,6 +35,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <vector>
+#include <string>
 
 namespace android3d
 {
@@ -48,6 +49,7 @@ public:
     static void release();
 
     static Scene* getInstance();
+    static std::string ROOT_PATH;
 
     /*
      * Following methods can be called from any thread.

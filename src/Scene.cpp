@@ -33,6 +33,7 @@ namespace android3d
 {
 
 Scene* Scene::mInstance = NULL;
+std::string Scene::ROOT_PATH = "/data/data/com.peony.android3d/files/";
 
 Scene::Scene() :
 mDisplay(NULL),
