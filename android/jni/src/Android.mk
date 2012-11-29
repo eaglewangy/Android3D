@@ -13,6 +13,6 @@ LOCAL_SRC_FILES := android3d_jni.cpp
 
 LOCAL_STATIC_LIBRARIES := android3d
 
-LOCAL_LDLIBS :=  -llog -lGLESv2 -landroid -lEGL
+LOCAL_LDLIBS :=  -llog -lGLESv2 -landroid -lEGL -lz
 
 include $(BUILD_SHARED_LIBRARY)

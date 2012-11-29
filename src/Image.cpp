@@ -21,11 +21,11 @@
 #include "Image.h"
 #include "Utils.h"
 
-#include <png.h>
-#include <stdlib.h>
 #include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <png.h>
+#include <stdlib.h>
 
 namespace android3d
 {
@@ -175,6 +175,3 @@ void Image::read_png(std::string fileName)
 #endif
 
 } //end namespace
-
-
-

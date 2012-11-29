@@ -16,7 +16,8 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
                     $(LOCAL_PATH)/../../../src/3rdParty/glm \
                     $(LOCAL_PATH)/../../../src/3rdParty/libpng \
 
-LOCAL_LDLIBS    := -llog -lGLESv2 -landroid -lEGL -lpng
+LOCAL_STATIC_LIBRARIES := png
+LOCAL_LDLIBS    := -llog -lGLESv2 -landroid -lEGL -lz
 LOCAL_CFLAGS := -DANDROID_NDK -Werror -D GL_GLEXT_PROTOTYPES 
 LOCAL_SRC_FILES := \
         $(subst $(LOCAL_PATH)/,, \

@@ -7,9 +7,9 @@ LOCAL_MODULE := libpng
 LOCAL_LDLIBS := -lz
 LOCAL_SRC_FILES := \
 	$(subst $(LOCAL_PATH)/,, \
-	$(wildcard $(LOCAL_PATH)/../../../src/3rdParty/libpng/*.c))
+	$(wildcard $(LOCAL_PATH)/../../../../src/3rdParty/libpng/*.c))
 
-$(info $(LOCAL_SRC_FILES)) 
+#$(info $(LOCAL_PATH)) 
 
-include $(BUILD_SHARED_LIBRARY)
-#include $(BUILD_STATIC_LIBRARY)
+#include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_STATIC_LIBRARY)

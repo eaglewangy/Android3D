@@ -323,9 +323,9 @@ void Mesh::initGlCmds()
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
 	}
 
-	//std::string texture = Scene::ROOT_PATH + "logo.png";
-	//Image image;
-	//image.read(texture);
+	std::string texture = Scene::ROOT_PATH + "logo.png";
+	Image image;
+	image.read(texture);
 
 	mHasInitialized = true;
 

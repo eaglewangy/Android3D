@@ -101,7 +101,6 @@ public class Android3D extends Activity implements SurfaceHolder.Callback {
 
     static {
         System.loadLibrary("android3d_jni");
-        System.loadLibrary("png");
     }
 
 }
