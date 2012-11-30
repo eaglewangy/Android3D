@@ -106,6 +106,18 @@ GLfloat texture[] = {
 		1.0f, 1.0f, // TexCoord 2
 		1.0f, 0.0f // TexCoord 3
 		};
+
+GLfloat gSquareVertex[] = {
+		-0.5f, -0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+		0.5f, 0.5f, 0.0f,
+		0.5f, -0.5, 0.0f,
+};
+
+GLushort gSquareIndex[] = {
+    0, 1, 2,
+    0, 2, 3
+};
 /*--------------------------------------End test data---------------------------------------*/
 
 static ANativeWindow* gWindow = NULL;
@@ -121,22 +133,33 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 {
 	gScene->start();
 
-	android3d::Mesh* mesh1 = new android3d::Mesh();
-	mesh1->setVertices(vertices, sizeof(vertices));
-	mesh1->setIndices(indices, sizeof(indices));
+	android3d::Mesh* cube = new android3d::Mesh();
+	cube->setVertices(vertices, sizeof(vertices));
+	cube->setIndices(indices, sizeof(indices));
 	//mesh1->setUvs(texture, sizeof(texture));
-	mesh1->setPosition(-3.0f, 5.0f, 0.0f);
-	mesh1->setTriangleNums(12);
-	gScene->addMesh(mesh1);
+	cube->setPosition(-3.0f, 5.0f, 0.0f);
+	cube->setTriangleNums(12);
+	gScene->addMesh(cube);
 
-	android3d::Mesh* mesh2 = new android3d::Mesh();
-	mesh2->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
-	mesh2->setScale(3.0f, 3.0f, 3.0f);
-	mesh2->setUvs(texture, sizeof(texture));
+	android3d::Mesh* triangle = new android3d::Mesh();
+	triangle->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
+	triangle->setScale(3.0f, 3.0f, 3.0f);
+	//mesh2->setUvs(texture, sizeof(texture));
 	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
-	mesh2->setTriangleNums(1);
-	gScene->addMesh(mesh2);
-    return;
+	triangle->setTriangleNums(1);
+	gScene->addMesh(triangle);
+
+	android3d::Mesh* square = new android3d::Mesh();
+	square->setVertices(gSquareVertex, sizeof(gSquareVertex));
+	square->setIndices(gSquareIndex, sizeof(gSquareIndex));
+	square->setScale(3.0f, 3.0f, 3.0f);
+	square->setPosition(0.0f, -5.0f, 0.0f);
+	square->setUvs(texture, sizeof(texture));
+	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
+	square->setTriangleNums(2);
+	gScene->addMesh(square);
+
+	return;
 }
 
 JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnPause(JNIEnv* jenv, jobject obj)

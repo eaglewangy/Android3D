@@ -23,6 +23,7 @@
 #define IMAGE_H_
 
 #include <string>
+#include <GLES2/gl2.h>
 
 namespace android3d
 {
@@ -37,12 +38,13 @@ class Image
 {
 public:
 	Image();
+	virtual ~Image();
 	void read(std::string fileName);
 	void write(std::string fileName);
-	unsigned char* getData();
+	GLuint* getData();
 
 private:
-	unsigned char* mData;
+	GLuint* mData;
 	int mWidth;
 	int mHeight;
 

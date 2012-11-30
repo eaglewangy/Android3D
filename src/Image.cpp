@@ -46,6 +46,11 @@ mImageType(TYPE_NONE)
 {
 }
 
+Image::~Image()
+{
+	delete[] mData;
+}
+
 void Image::read(std::string fileName)
 {
 	int pos = fileName.find_last_of(".");
@@ -74,7 +79,6 @@ void Image::read(std::string fileName)
 	}
 }
 
-#if 1
 void Image::read_png(std::string fileName)
 {
 	/*8 is the maximum size that can be checked.*/
@@ -137,7 +141,8 @@ void Image::read_png(std::string fileName)
 
 	int x = 0, y = 0;
 	png_bytep* row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
-	for (y =  0; y < height; y++)
+	//mData = (png_bytep*) malloc(sizeof(png_bytep) * height * );
+	for (y = 0; y < height; y++)
 		row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
 
 	png_read_image(png_ptr, row_pointers);
@@ -157,21 +162,38 @@ void Image::read_png(std::string fileName)
 		return;
 	}
 
+	mData = new GLuint[height * width];
+	int k = 0;
 	for (y = 0; y < height; y++)
 	{
 		png_byte* row = row_pointers[y];
 		for (x = 0; x < width; x++)
 		{
 			png_byte* ptr = &(row[x*4]);
-			LOGE("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
-					x, y, ptr[0], ptr[1], ptr[2], ptr[3]);
+			/*LOGE("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
+					x, y, ptr[0], ptr[1], ptr[2], ptr[3]);*/
 
+			GLuint pixel = ((ptr[0]&0x0ff) << 24) +
+					       ((ptr[1]&0x0ff) << 16) +
+					       ((ptr[2]&0x0ff) << 8) +
+					       (ptr[3]&0x0ff);
+
+			mData[k] = pixel;
+			++k;
 			/* set red value to 0 and green value to the blue one */
 			//ptr[0] = 0;
 			//ptr[1] = ptr[2];
 		}
 	}
+
+	for (y = 0; y < height; y++)
+		free(row_pointers[y]);
+	free(row_pointers);
 }
-#endif
+
+GLuint* Image::getData()
+{
+	return mData;
+}
 
 } //end namespace

@@ -63,7 +63,7 @@ static const char gFragmentShader[] =
 		"      gl_FragColor = v_color;                         \n"
 		"  }                                                   \n"
 		"  else {                                              \n"
-		"      gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);        \n"
+		"      gl_FragColor = vec4(0.0, 0.0, 1.0, 0.0);        \n"
 		"  }                                                   \n"
 		"}                                                     \n";
 
@@ -75,28 +75,29 @@ GLint  Mesh::mFragmentShader = 0;
 Mesh::Mesh() :
 mVertex(NULL),
 mVertexSize(0),
-mNormals(NULL),
+mVertexIndex(NULL),
+mVertexIndexSize(0),
+mVetextLocation(-1),
+mVertexEnabled(GL_FALSE),
+mTriangleNums(0),
 mUVS(NULL),
+mUVSSize(0),
+mTextureId(-1),
+mTextureLocation(-1),
+mEnableTextureLocation(-1),
+mTextureData(NULL),
+mSamplerLocation(-1),
+mTextureVBO(0),
 mColors(NULL),
 mColorSize(0),
 mColorVBO(0),
-mEnableVertexColorLocation(-1),
-mIndex(NULL),
-mIndexSize(0),
+mEnableColorLocation(-1),
+mColorLocation(-1),
 mTanslateVec(NULL),
 mRotateVec(NULL),
 mScaleVec(NULL),
-mTextureId(-1),
-mTriangleNums(0),
-mVetextLocation(-1),
 mMVPMatrixLocation(-1),
-mTextureLocation(-1),
-mEnableTextureLocation(-1),
-mColorLocation(-1),
-mTextureData(NULL),
-mSamplerLocation(-1),
-mHasInitialized(false),
-mEnabled(GL_FALSE)
+mGLHasInitialized(false)
 {
 	memset(mVertexVBO, 0, sizeof(mVertexVBO));
 }
@@ -104,14 +105,13 @@ mEnabled(GL_FALSE)
 Mesh::~Mesh()
 {
 	FREEANDNULL(mVertex);
-	FREEANDNULL(mIndex);
+	FREEANDNULL(mVertexIndex);
 	FREEANDNULL(mTanslateVec);
 	FREEANDNULL(mRotateVec);
 	FREEANDNULL(mScaleVec);
 	FREEANDNULL(mUVS);
 	DELETEANDNULL(mTextureData, true);
 
-	DELETEANDNULL(mNormals, true);
 	DELETEANDNULL(mColors, true);
 
 	glDeleteProgram(mShaderProgram);
@@ -125,12 +125,14 @@ Mesh::~Mesh()
 	//Relsase Color buffer object
 	glDeleteBuffers(1, &mColorVBO);
 	mColorVBO = 0;
+	glDeleteBuffers(1, &mTextureVBO);
+	mTextureVBO = 0;
 
 	mShaderProgram = 0;
 	mVertexShader = 0;
 	mFragmentShader = 0;
 
-	mEnableVertexColorLocation = -1;
+	mEnableColorLocation = -1;
 
 	LOGI("Delete meshes...");
 }
@@ -145,27 +147,22 @@ void Mesh::setVertices(GLfloat* vertex, int size)
 	setEnabled(GL_TRUE);
 }
 
-void Mesh::setNormals(GLfloat* normals, int size)
-{
-	DELETEANDNULL(mNormals, true);
-	mNormals = new GLfloat[size];
-	memcpy(mNormals, normals, size);
-}
-
 void Mesh::setUvs(GLfloat* uvs, int size)
 {
 	FREEANDNULL(mUVS);
 	mUVS = (GLfloat*)malloc(size);
 	memcpy(mUVS, uvs, size);
+
+	mUVSSize = size;
 }
 
 void Mesh::setIndices(GLushort* index, int size)
 {
-	FREEANDNULL(mIndex);
-	mIndex = (GLushort*)malloc(size);
-	memcpy(mIndex, index, size);
+	FREEANDNULL(mVertexIndex);
+	mVertexIndex = (GLushort*)malloc(size);
+	memcpy(mVertexIndex, index, size);
 
-	mIndexSize = size;
+	mVertexIndexSize = size;
 }
 
 void Mesh::setTriangleNums(GLint triangleNums)
@@ -218,7 +215,7 @@ void Mesh::setColors(GLfloat* colors, int size)
 
 void Mesh::setEnabled(GLboolean enabled)
 {
-	mEnabled = enabled;
+	mVertexEnabled = enabled;
 }
 
 void Mesh::initGlCmds()
@@ -244,11 +241,11 @@ void Mesh::initGlCmds()
 	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
 	mEnableTextureLocation = glGetUniformLocation(mShaderProgram, "u_enableTexture");
 	mColorLocation = glGetAttribLocation(mShaderProgram, "a_vcolor");
-	mEnableVertexColorLocation = glGetUniformLocation(mShaderProgram, "u_enableVertexColor");
+	mEnableColorLocation = glGetUniformLocation(mShaderProgram, "u_enableVertexColor");
 
 	mModelMatrix = glm::mat4(1.0);
 
-	if (mEnabled)
+	if (mVertexEnabled)
 	{
 		/*
 		 * mVertextVBO[0] store vertex attribute data.
@@ -272,10 +269,10 @@ void Mesh::initGlCmds()
 		// Unbind the VBO
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
-	if (mIndex != NULL)
+	if (mVertexIndex != NULL)
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mVertexVBO[1]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndexSize, mIndex, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mVertexIndexSize, mVertexIndex, GL_STATIC_DRAW);
 		// Unbind the VBO
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
@@ -300,8 +297,24 @@ void Mesh::initGlCmds()
 
 	if (mUVS != NULL)
 	{
+		glGenBuffers(1, &mTextureVBO);
+		// Bind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
+		// Set the buffer's data
+		glBufferData(GL_ARRAY_BUFFER, mUVSSize, mUVS, GL_STATIC_DRAW);
+		// Unbind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 		glGenTextures(1, &mTextureId);
 		int TEX_SIZE = 128;
+		std::string texture = Scene::ROOT_PATH + "logo.png";
+		Image image;
+		image.read(texture);
+		mTextureData = new GLuint[TEX_SIZE * TEX_SIZE];
+        char* tmp = (char*)image.getData();
+		memcpy(mTextureData, image.getData(),strlen(tmp));
+		//mTextureData = image.getData();
+#if 1
 		// Creates the data as a 32bits integer array (8bits per component)
 		mTextureData = new GLuint[TEX_SIZE*TEX_SIZE];
 		for (int i=0; i<TEX_SIZE; i++)
@@ -312,31 +325,25 @@ void Mesh::initGlCmds()
 				if ( ((i*j)/8) % 2 ) col = (GLuint) (255<<24) + (255<<16) + (0<<8) + (255);
 				mTextureData[j*TEX_SIZE+i] = col;
 			}
-
+#endif
 		// Set the filtering mode
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, mUVS);
-		glEnableVertexAttribArray(mTextureLocation);
 		// Bind the texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
 	}
 
-	std::string texture = Scene::ROOT_PATH + "logo.png";
-	Image image;
-	image.read(texture);
-
-	mHasInitialized = true;
+	mGLHasInitialized = true;
 
 }
 
 void Mesh::render()
 {
-	if (!mEnabled)
+	if (!mVertexEnabled)
 		return;
 
-	if (!mHasInitialized)
+	if (!mGLHasInitialized)
 		initGlCmds();
 
 	glUseProgram(mShaderProgram);
@@ -351,7 +358,11 @@ void Mesh::render()
 		// Set the sampler texture unit to 0
 		glUniform1i(mSamplerLocation, 0);
 		int TEX_SIZE = 128;
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, mTextureData);
+		glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
+
+		glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);
+		glEnableVertexAttribArray(mTextureLocation);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEX_SIZE, TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureData);
 	}
 	else
 	{
@@ -360,7 +371,7 @@ void Mesh::render()
 
 	if (mColors != NULL)
 	{
-		glUniform1i(mEnableVertexColorLocation, 1);
+		glUniform1i(mEnableColorLocation, 1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, mColorVBO);
 		glVertexAttribPointer(mColorLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
@@ -368,8 +379,8 @@ void Mesh::render()
 	}
 	else
 	{
-		glUniform1i(mEnableVertexColorLocation, 0);
-		glDisableVertexAttribArray(mEnableVertexColorLocation);
+		glUniform1i(mEnableColorLocation, 0);
+		glDisableVertexAttribArray(mEnableColorLocation);
 	}
 
 	/*static int count;
@@ -380,7 +391,7 @@ void Mesh::render()
 
 	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mMVPMatrix * mModelMatrix));
 
-	if (mIndex != NULL)
+	if (mVertexIndex != NULL)
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mVertexVBO[1]);
 		glDrawElements(GL_TRIANGLES, mTriangleNums * 3, GL_UNSIGNED_SHORT, NULL);

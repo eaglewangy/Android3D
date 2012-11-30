@@ -52,49 +52,51 @@ public:
 	void render();
 
 protected:
-	GLfloat* mVertex;
-	//vertex array size in bytes
-	int mVertexSize;
-	GLushort* mIndex;
-	//vertext array index size in bytes
-	int mIndexSize;
-	GLfloat* mUVS;
-
-	GLfloat* mNormals;
-	GLfloat* mColors;
-	int mColorSize;
-	GLuint mEnableVertexColorLocation;
-
-	GLint    mTriangleNums;
-	GLboolean   mEnabled;
 	/* private functions */
 	void initGlCmds();
 
-	glm::mat4 mMVPMatrix;
-	glm::mat4 mModelMatrix;
+	GLfloat*   mVertex;
+	//vertex array size in bytes
+	int        mVertexSize;
+	GLushort*  mVertexIndex;
+	//vertext array index size in bytes
+	int        mVertexIndexSize;
+	/* vetext position location */
+	GLuint     mVetextLocation;
+	GLboolean  mVertexEnabled;
+	GLuint     mVertexVBO[2];
+	GLint      mTriangleNums;
+
+	GLfloat*   mUVS;
+	int        mUVSSize;
+	GLuint     mTextureLocation;
+	GLuint     mEnableTextureLocation;
+	GLuint     mTextureId;
+	GLuint*    mTextureData;
+	GLuint     mSamplerLocation;
+	GLuint     mTextureVBO;
+
+	GLfloat*   mColors;
+	int        mColorSize;
+	GLuint     mColorLocation;
+	GLuint     mEnableColorLocation;
+	GLuint     mColorVBO;
+
+	bool       mGLHasInitialized;
+
+	/* MVP matrix shader location */
+	GLuint     mMVPMatrixLocation;
+	glm::mat4  mMVPMatrix;
+	glm::mat4  mModelMatrix;
 	glm::vec3* mTanslateVec;
 	glm::vec3* mRotateVec;
 	glm::vec3* mScaleVec;
-	/* vetext position location */
-	GLuint mVetextLocation;
-	/* MVP matrix shader location */
-	GLuint mMVPMatrixLocation;
-	GLuint mTextureLocation;
-	GLuint mEnableTextureLocation;
-	GLuint mSamplerLocation;
-	GLuint mColorLocation;
+
+	ShaderManager mShaderManager;
 	/* shader program */
 	static GLuint mShaderProgram;
 	static GLint  mVertexShader;
 	static GLint  mFragmentShader;
-	GLuint mTextureId;
-	GLuint* mTextureData;
-	GLuint mVertexVBO[2];
-	GLuint mColorVBO;
-
-	ShaderManager mShaderManager;
-
-	bool mHasInitialized;
 }; //end mesh
 
 } //end namespace
