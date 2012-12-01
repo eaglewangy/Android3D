@@ -37,20 +37,25 @@ enum ImageType {
 class Image
 {
 public:
-	Image();
+	Image(std::string fileName);
 	virtual ~Image();
-	void read(std::string fileName);
-	void write(std::string fileName);
-	GLuint* getData();
+	/**
+	 * buffer uses to store image data
+	 */
+	void read();
+	unsigned char* getData();
+	inline int getWidth() {return mWidth;};
+	inline int getHeight() {return mHeight;};
 
 private:
-	GLuint* mData;
-	int mWidth;
-	int mHeight;
+	std::string mName;
+	unsigned char* mData;
+	unsigned int mWidth;
+	unsigned int mHeight;
 
 	ImageType mImageType;
 
-	void read_png(std::string fileName);
+	void read_png();
 };
 
 } //end namespace

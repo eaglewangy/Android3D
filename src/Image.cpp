@@ -38,7 +38,8 @@ static char tolower(char ch)
 	return ch;
 }
 
-Image::Image() :
+Image::Image(std::string fileName) :
+mName(fileName),
 mData(NULL),
 mWidth(0),
 mHeight(0),
@@ -48,13 +49,14 @@ mImageType(TYPE_NONE)
 
 Image::~Image()
 {
-	delete[] mData;
+	free(mData);
+	LOGE("Free Image...");
 }
 
-void Image::read(std::string fileName)
+void Image::read()
 {
-	int pos = fileName.find_last_of(".");
-	std::string extension = fileName.substr(pos + 1);
+	int pos = mName.find_last_of(".");
+	std::string extension = mName.substr(pos + 1);
 	std::transform(extension.begin(), extension.end(), extension.begin(), tolower);
 	if (extension == "png")
 		mImageType = TYPE_PNG;
@@ -66,132 +68,159 @@ void Image::read(std::string fileName)
 	switch(mImageType)
 	{
 	case TYPE_NONE:
-		LOGE("No support for this type of image.(%s)", fileName.c_str());
+		LOGE("No support for this type of image.(%s)", mName.c_str());
 		break;
 	case TYPE_PNG:
-		read_png(fileName);
+		read_png();
 		break;
 	case TYPE_JPEG:
 		break;
 	default:
-		LOGE("No support for this type of image.(%s)", fileName.c_str());
+		LOGE("No support for this type of image.(%s)", mName.c_str());
 		break;
 	}
 }
 
-void Image::read_png(std::string fileName)
+void Image::read_png()
 {
-	/*8 is the maximum size that can be checked.*/
 	png_byte header[8];
+	png_uint_32 width = 0;
+	png_uint_32 height = 0;
 
-	/* open file and test for it being a png */
-	FILE *fp = fopen(fileName.c_str(), "rb");
-	if (!fp)
+	FILE *fp = fopen(mName.c_str(), "rb");
+	if (fp == 0)
 	{
-		LOGE("Failed to open %s to read.", fileName.c_str());
+		LOGE("Failed to open %s to read.", mName.c_str());
 		return;
 	}
+
+	// read the header
 	fread(header, 1, 8, fp);
+
 	if (png_sig_cmp(header, 0, 8))
 	{
-		LOGE("%s is not recognized as a PNG file.", fileName.c_str());
+		LOGE("%s is not recognized as a PNG file.", mName.c_str());
+		fclose(fp);
 		return;
 	}
 
-	/* initialize stuff */
 	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!png_ptr)
 	{
 		LOGE("png_create_read_struct failed.");
+		fclose(fp);
 		return;
 	}
 
+	// create png info struct
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr)
 	{
 		LOGE("png_create_info_struct failed.");
+		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+		fclose(fp);
 		return;
 	}
 
-	if (setjmp(png_jmpbuf(png_ptr)))
+	// create png info struct
+	png_infop end_info = png_create_info_struct(png_ptr);
+	if (!end_info)
 	{
 		LOGE("Error during init_io in read_png");
+		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+		fclose(fp);
 		return;
 	}
 
-	png_init_io(png_ptr, fp);
-	png_set_sig_bytes(png_ptr, 8);
-
-	png_read_info(png_ptr, info_ptr);
-
-	int width = png_get_image_width(png_ptr, info_ptr);
-	int height = png_get_image_height(png_ptr, info_ptr);
-	png_byte color_type = png_get_color_type(png_ptr, info_ptr);
-	png_byte bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-
-	int number_of_passes = png_set_interlace_handling(png_ptr);
-	png_read_update_info(png_ptr, info_ptr);
-
-	 //read file
+	// the code in this if statement gets called if libpng encounters an error
 	if (setjmp(png_jmpbuf(png_ptr)))
 	{
 		LOGE("Error during read_image in read_png");
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+		fclose(fp);
 		return;
 	}
 
-	int x = 0, y = 0;
-	png_bytep* row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
-	//mData = (png_bytep*) malloc(sizeof(png_bytep) * height * );
-	for (y = 0; y < height; y++)
-		row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
+	// init png reading
+	png_init_io(png_ptr, fp);
 
+	// let libpng know you already read the first 8 bytes
+	png_set_sig_bytes(png_ptr, 8);
+
+	// read all the info up to the image data
+	png_read_info(png_ptr, info_ptr);
+
+	// variables to pass to get info
+	int bit_depth, color_type;
+
+	// get info about png
+	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+			NULL, NULL, NULL);
+
+	if (width)
+		mWidth = width;
+	if (height)
+		mHeight = height;
+
+	// Update the png info struct.
+	png_read_update_info(png_ptr, info_ptr);
+
+	// Row size in bytes.
+	int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+
+	// glTexImage2d requires rows to be 4-byte aligned
+	rowbytes += 3 - ((rowbytes-1) % 4);
+
+	// Allocate the image_data as a big block, to be given to opengl
+	png_byte* image_data;
+	int size = (size_t)rowbytes * height * sizeof(png_byte)+15;
+	image_data = (png_byte*)malloc(size);
+	if (image_data == NULL)
+	{
+		LOGE("Error: could not allocate memory for PNG image data.");
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+		fclose(fp);
+		return;
+	}
+
+	// row_pointers is for pointing to image_data for reading the png with libpng
+	png_bytep* row_pointers = (png_bytep*)malloc(height * sizeof(png_bytep));
+	if (row_pointers == NULL)
+	{
+		LOGE("error: could not allocate memory for PNG row pointers.");
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+		free(image_data);
+		fclose(fp);
+		return;
+	}
+
+	// set the individual row_pointers to point at the correct offsets of image_data
+	int i;
+	for (i = 0; i < height; i++)
+	{
+		row_pointers[height - 1 - i] = image_data + i * rowbytes;
+	}
+
+	// read the png into image_data through row_pointers
 	png_read_image(png_ptr, row_pointers);
 
-	fclose(fp);
+	// Generate the OpenGL texture object
+	/*GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, temp_width, temp_height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);*/
 
-	/* Begin process png. */
-	if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGB)
-	{
-		LOGE("%s is PNG_COLOR_TYPE_RGB but must be PNG_COLOR_TYPE_RGBA (lacks the alpha channel)", fileName.c_str());
-		return;
-	}
+	// clean up
+	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 
-	if (png_get_color_type(png_ptr, info_ptr) != PNG_COLOR_TYPE_RGBA)
-	{
-		LOGE("color_type of %s must be PNG_COLOR_TYPE_RGBA (%d) (is %d)", fileName.c_str(), PNG_COLOR_TYPE_RGBA, png_get_color_type(png_ptr, info_ptr));
-		return;
-	}
-
-	mData = new GLuint[height * width];
-	int k = 0;
-	for (y = 0; y < height; y++)
-	{
-		png_byte* row = row_pointers[y];
-		for (x = 0; x < width; x++)
-		{
-			png_byte* ptr = &(row[x*4]);
-			/*LOGE("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
-					x, y, ptr[0], ptr[1], ptr[2], ptr[3]);*/
-
-			GLuint pixel = ((ptr[0]&0x0ff) << 24) +
-					       ((ptr[1]&0x0ff) << 16) +
-					       ((ptr[2]&0x0ff) << 8) +
-					       (ptr[3]&0x0ff);
-
-			mData[k] = pixel;
-			++k;
-			/* set red value to 0 and green value to the blue one */
-			//ptr[0] = 0;
-			//ptr[1] = ptr[2];
-		}
-	}
-
-	for (y = 0; y < height; y++)
-		free(row_pointers[y]);
+	mData = image_data;
 	free(row_pointers);
+	fclose(fp);
 }
 
-GLuint* Image::getData()
+unsigned char* Image::getData()
 {
 	return mData;
 }

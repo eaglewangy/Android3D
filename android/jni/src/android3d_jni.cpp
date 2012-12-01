@@ -144,7 +144,7 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	android3d::Mesh* triangle = new android3d::Mesh();
 	triangle->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
 	triangle->setScale(3.0f, 3.0f, 3.0f);
-	//mesh2->setUvs(texture, sizeof(texture));
+	//triangle->setUvs(texture, sizeof(texture));
 	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
 	triangle->setTriangleNums(1);
 	gScene->addMesh(triangle);
@@ -155,6 +155,8 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	square->setScale(3.0f, 3.0f, 3.0f);
 	square->setPosition(0.0f, -5.0f, 0.0f);
 	square->setUvs(texture, sizeof(texture));
+	std::string texturePath = android3d::Scene::ROOT_PATH + "logo.png";
+	square->setImage(texturePath);
 	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
 	square->setTriangleNums(2);
 	gScene->addMesh(square);

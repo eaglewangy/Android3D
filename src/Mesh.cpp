@@ -82,6 +82,7 @@ mVertexEnabled(GL_FALSE),
 mTriangleNums(0),
 mUVS(NULL),
 mUVSSize(0),
+mTextureImage(NULL),
 mTextureId(-1),
 mTextureLocation(-1),
 mEnableTextureLocation(-1),
@@ -110,6 +111,7 @@ Mesh::~Mesh()
 	FREEANDNULL(mRotateVec);
 	FREEANDNULL(mScaleVec);
 	FREEANDNULL(mUVS);
+	DELETEANDNULL(mTextureImage, false);
 	DELETEANDNULL(mTextureData, true);
 
 	DELETEANDNULL(mColors, true);
@@ -154,6 +156,13 @@ void Mesh::setUvs(GLfloat* uvs, int size)
 	memcpy(mUVS, uvs, size);
 
 	mUVSSize = size;
+}
+
+void Mesh::setImage(std::string file)
+{
+	DELETEANDNULL(mTextureImage, false);
+	mTextureImage = new Image(file);
+	mTextureImage->read();
 }
 
 void Mesh::setIndices(GLushort* index, int size)
@@ -306,15 +315,8 @@ void Mesh::initGlCmds()
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		glGenTextures(1, &mTextureId);
+#if 0
 		int TEX_SIZE = 128;
-		std::string texture = Scene::ROOT_PATH + "logo.png";
-		Image image;
-		image.read(texture);
-		mTextureData = new GLuint[TEX_SIZE * TEX_SIZE];
-        char* tmp = (char*)image.getData();
-		memcpy(mTextureData, image.getData(),strlen(tmp));
-		//mTextureData = image.getData();
-#if 1
 		// Creates the data as a 32bits integer array (8bits per component)
 		mTextureData = new GLuint[TEX_SIZE*TEX_SIZE];
 		for (int i=0; i<TEX_SIZE; i++)
@@ -335,7 +337,6 @@ void Mesh::initGlCmds()
 	}
 
 	mGLHasInitialized = true;
-
 }
 
 void Mesh::render()
@@ -362,7 +363,9 @@ void Mesh::render()
 
 		glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);
 		glEnableVertexAttribArray(mTextureLocation);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEX_SIZE, TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureData);
+		if(mTextureImage != NULL)
+		   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mTextureImage->getWidth(),
+				   mTextureImage->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureImage->getData());
 	}
 	else
 	{

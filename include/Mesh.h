@@ -23,6 +23,7 @@
 
 #include "Scene.h"
 #include "ShaderManager.h"
+#include "Image.h"
 
 #include <GLES2/gl2.h>
 
@@ -37,6 +38,7 @@ public:
 	void setVertices(GLfloat* vertices, int size);
 	void setNormals(GLfloat* normals, int size);
 	void setUvs(GLfloat* uvs, int size);
+	void setImage(std::string file);
 	void setColors(GLfloat* colors, int size);
 	void setIndices(GLushort* indices, int size);
 	void setTextureId(GLint textureId);
@@ -69,10 +71,11 @@ protected:
 
 	GLfloat*   mUVS;
 	int        mUVSSize;
+	Image*     mTextureImage;
 	GLuint     mTextureLocation;
 	GLuint     mEnableTextureLocation;
 	GLuint     mTextureId;
-	GLuint*    mTextureData;
+	GLubyte*   mTextureData;
 	GLuint     mSamplerLocation;
 	GLuint     mTextureVBO;
 
