@@ -155,7 +155,7 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	square->setScale(3.0f, 3.0f, 3.0f);
 	square->setPosition(0.0f, -5.0f, 0.0f);
 	square->setUvs(texture, sizeof(texture));
-	std::string texturePath = android3d::Scene::ROOT_PATH + "logo.png";
+	std::string texturePath = android3d::Scene::ROOT_PATH + "logo_jpeg.jpg";
 	square->setImage(texturePath);
 	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
 	square->setTriangleNums(2);

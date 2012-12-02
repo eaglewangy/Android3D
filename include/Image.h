@@ -46,16 +46,19 @@ public:
 	unsigned char* getData();
 	inline int getWidth() {return mWidth;};
 	inline int getHeight() {return mHeight;};
+	inline bool hasAlpha() {return mHasAlpha;};
 
 private:
 	std::string mName;
 	unsigned char* mData;
 	unsigned int mWidth;
 	unsigned int mHeight;
+	bool mHasAlpha;
 
 	ImageType mImageType;
 
 	void read_png();
+	void read_jpeg();
 };
 
 } //end namespace
