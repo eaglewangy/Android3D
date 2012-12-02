@@ -149,17 +149,29 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	triangle->setTriangleNums(1);
 	gScene->addMesh(triangle);
 
-	android3d::Mesh* square = new android3d::Mesh();
-	square->setVertices(gSquareVertex, sizeof(gSquareVertex));
-	square->setIndices(gSquareIndex, sizeof(gSquareIndex));
-	square->setScale(3.0f, 3.0f, 3.0f);
-	square->setPosition(0.0f, -5.0f, 0.0f);
-	square->setUvs(texture, sizeof(texture));
+	android3d::Mesh* square1 = new android3d::Mesh();
+	square1->setVertices(gSquareVertex, sizeof(gSquareVertex));
+	square1->setIndices(gSquareIndex, sizeof(gSquareIndex));
+	square1->setScale(3.0f, 3.0f, 3.0f);
+	square1->setPosition(-3.0f, -5.0f, 0.0f);
+	square1->setUvs(texture, sizeof(texture));
 	std::string texturePath = android3d::Scene::ROOT_PATH + "logo_jpeg.jpg";
-	square->setImage(texturePath);
+	square1->setImage(texturePath);
 	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
-	square->setTriangleNums(2);
-	gScene->addMesh(square);
+	square1->setTriangleNums(2);
+	gScene->addMesh(square1);
+
+	android3d::Mesh* square2 = new android3d::Mesh();
+	square2->setVertices(gSquareVertex, sizeof(gSquareVertex));
+	square2->setIndices(gSquareIndex, sizeof(gSquareIndex));
+	square2->setScale(3.0f, 3.0f, 3.0f);
+	square2->setPosition(3.0f, -5.0f, 0.0f);
+	square2->setUvs(texture, sizeof(texture));
+	texturePath = android3d::Scene::ROOT_PATH + "logo.png";
+	square2->setImage(texturePath);
+	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
+	square2->setTriangleNums(2);
+	gScene->addMesh(square2);
 
 	return;
 }

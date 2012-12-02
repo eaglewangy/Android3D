@@ -42,7 +42,7 @@ public:
 	/**
 	 * buffer uses to store image data
 	 */
-	void read();
+	void load();
 	unsigned char* getData();
 	inline int getWidth() {return mWidth;};
 	inline int getHeight() {return mHeight;};

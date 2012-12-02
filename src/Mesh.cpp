@@ -162,7 +162,7 @@ void Mesh::setImage(std::string file)
 {
 	DELETEANDNULL(mTextureImage, false);
 	mTextureImage = new Image(file);
-	mTextureImage->read();
+	mTextureImage->load();
 }
 
 void Mesh::setIndices(GLushort* index, int size)

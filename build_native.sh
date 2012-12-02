@@ -11,11 +11,15 @@ cd src/3rdParty
 git clone https://github.com/g-truc/glm.git
 #get libpng
 git clone  https://github.com/julienr/libpng-android.git
+#get libjpeg
+git clone https://github.com/eaglewangy/libjpeg-android.git
 
 mkdir libpng
 cp libpng-android/jni/*.c libpng/
 cp libpng-android/jni/*.h libpng/
 rm -rf libpng-android/
+
+mv libjpeg-android/ libjpeg/
 
 popd
 

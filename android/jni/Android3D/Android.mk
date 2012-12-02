@@ -15,7 +15,7 @@ LOCAL_MODULE := libandroid3d
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
                     $(LOCAL_PATH)/../../../src/3rdParty/glm \
                     $(LOCAL_PATH)/../../../src/3rdParty/libpng \
-                    $(LOCAL_PATH)/../jpeg \
+                    $(LOCAL_PATH)/../../../src/3rdParty/libjpeg \
 
 $(info $(LOCAL_PATH))
 LOCAL_STATIC_LIBRARIES := png jpeg

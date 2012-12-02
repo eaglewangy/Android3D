@@ -86,7 +86,7 @@ Image::~Image()
 	LOGE("Free Image...");
 }
 
-void Image::read()
+void Image::load()
 {
 	int pos = mName.find_last_of(".");
 	std::string extension = mName.substr(pos + 1);
@@ -272,7 +272,7 @@ void Image::read_jpeg()
 	int row_stride;		/* physical row width in output buffer */
 	unsigned char* image;
 
-	/* In this example we want to open the input file before doing anything else,
+	/* Open the input file before doing anything else,
 	 * so that the setjmp() error recovery below can assume the file is open.
 	 * VERY IMPORTANT: use "b" option to fopen() if you are on a machine that
 	 * requires it in order to read binary files.
@@ -285,7 +285,7 @@ void Image::read_jpeg()
 
 	/* Step 1: allocate and initialize JPEG decompression object */
 
-	/* We set up the normal JPEG error routines, then override error_exit. */
+	/* Set up the normal JPEG error routines, then override error_exit. */
 	cinfo.err = jpeg_std_error(&jerr.pub);
 	jerr.pub.error_exit = jpeg_error_exit;
 	/* Establish the setjmp return context for my_error_exit to use. */
@@ -315,7 +315,7 @@ void Image::read_jpeg()
 
 	/* Step 4: set parameters for decompression */
 
-	/* In this example, we don't need to change any of the defaults set by
+	/*we don't need to change any of the defaults set by
 	 * jpeg_read_header(), so we do nothing here.
 	 */
 
@@ -330,7 +330,7 @@ void Image::read_jpeg()
 	 * the data.  After jpeg_start_decompress() we have the correct scaled
 	 * output image dimensions available, as well as the output colormap
 	 * if we asked for color quantization.
-	 * In this example, we need to make an output work buffer of the right size.
+	 * we need to make an output work buffer of the right size.
 	 */
 	/* JSAMPLEs per row in output buffer */
 	mWidth = cinfo.output_width;
@@ -356,8 +356,6 @@ void Image::read_jpeg()
 		 * more than one scanline at a time if that's more convenient.
 		 */
 		(void) jpeg_read_scanlines(&cinfo, buffer, 1);
-		/* Assume put_scanline_someplace wants a pointer and sample count. */
-		//put_scanline_someplace(buffer[0], row_stride);
 		for(int i= 0; i < row_stride; i++)
 		    image[index++] = buffer[0][i];
 	}
@@ -385,8 +383,6 @@ void Image::read_jpeg()
 	/* At this point you may want to check to see whether any corrupt-data
 	 * warnings occurred (test whether jerr.pub.num_warnings is nonzero).
 	 */
-
-	/* And we're done! */
 }
 #endif
 
