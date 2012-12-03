@@ -209,7 +209,7 @@ void Mesh::initGlCmds()
 		LOGE("In Mesh::initGlCmds() create shader failed.");
 		return;
 	}
-	mMVPMatrixLocation = glGetUniformLocation(mShaderProgram, "u_MVPMatrix");
+	mMVPMatrixLocation = glGetUniformLocation(mShaderProgram, "u_mvpMatrix");
 	mVetextLocation = glGetAttribLocation(mShaderProgram, "vPosition");
 	mTextureLocation = glGetAttribLocation(mShaderProgram, "a_texCoord");
 	mSamplerLocation = glGetUniformLocation(mShaderProgram, "s_texture");
