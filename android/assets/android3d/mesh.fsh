@@ -49,26 +49,20 @@ vec4 compute_light(vec3 normal, DirectionalLight dl, Material material)
     return light;
 }
 
-void main() {                                           
+void main() {
+    vec4 light = vec4(1.0, 1.0, 1.0, 1.0);
+    if (u_enableLight == 1){
+        light = compute_light(v_ecNormal, u_directionalLight, u_material);
+    }
+    //light = vec4(1.2, 3.4, 1.0, 0.9);                                
     if (u_enableTexture == 1) {
         vec4 s = texture2D(s_texture, v_texCoord);
-        if (u_enableLight == 1){
-            //vec4 x = vec4(0.5, 1.6, 0.1, 0.5);
-            gl_FragColor = s * compute_light(v_ecNormal, u_directionalLight, u_material);
-        }
-        else{
-            gl_FragColor = s;
-        }             
+        gl_FragColor = s * light;        
 	}                                                 
 	else if (u_enableVertexColor == 1) {
-	    if (u_enableLight == 1){
-	        gl_FragColor = v_color * compute_light(v_ecNormal, u_directionalLight, u_material);
-	    }
-	    else{
-	        gl_FragColor = v_color;
-	    }
+	    gl_FragColor = v_color * light;
 	}                                                  
 	else {                                             
-	    gl_FragColor = vec4(0.0, 0.0, 1.0, 0.0);      
+	    gl_FragColor = vec4(0.0, 0.0, 1.0, 0.0) * light;      
 	}                                                
 }                                                  
