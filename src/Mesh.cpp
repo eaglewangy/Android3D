@@ -23,50 +23,10 @@
 #include "android3d.h"
 #include "ShaderManager.h"
 #include "Image.h"
+#include "Utils.h"
 
 namespace android3d
 {
-
-static const char gVertexShader[] =
-		// A constant representing the combined model/view/projection matrix.
-		"uniform mat4 u_MVPMatrix;               \n"
-		"attribute vec4 vPosition;               \n"
-		"attribute vec2 a_texCoord;              \n"
-		"varying vec2 v_texCoord;                \n"
-		"attribute vec4 a_vcolor;                \n"
-		"varying vec4 v_color;                   \n"
-		"uniform lowp int u_enableTexture;       \n"
-		"uniform lowp int u_enableVertexColor;   \n"
-
-		"void main() {                           \n"
-		"  gl_Position = u_MVPMatrix * vPosition;\n"
-		"  if(u_enableTexture == 1) {            \n"
-		"      v_texCoord = a_texCoord;          \n"
-		"  }                                     \n"
-		"  if (u_enableVertexColor == 1){        \n"
-		"      v_color = a_vcolor;               \n"
-		"  }                                     \n"
-		"}                                       \n";
-
-static const char gFragmentShader[] =
-		"precision mediump float;                              \n"
-		"varying vec4 v_color;                                 \n"
-		"uniform lowp int u_enableTexture;                     \n"
-		"uniform lowp int u_enableVertexColor;                 \n"
-		"uniform sampler2D s_texture;                          \n"
-		"varying vec2 v_texCoord;                              \n"
-		"void main() {                                         \n"
-		"  if (u_enableTexture == 1) {                         \n"
-		"      gl_FragColor = texture2D(s_texture, v_texCoord);\n"
-		"  }                                                   \n"
-		"  else if (u_enableVertexColor == 1) {                \n"
-		"      gl_FragColor = v_color;                         \n"
-		"  }                                                   \n"
-		"  else {                                              \n"
-		"      gl_FragColor = vec4(0.0, 0.0, 1.0, 0.0);        \n"
-		"  }                                                   \n"
-		"}                                                     \n";
-
 
 GLuint Mesh::mShaderProgram = 0;
 GLint  Mesh::mVertexShader = 0;
@@ -235,7 +195,12 @@ void Mesh::initGlCmds()
 		mVertexShader == 0 &&
 		mFragmentShader == 0)
 	{
-		mShaderProgram = mShaderManager.createProgram(gVertexShader, gFragmentShader);
+		std::string vertexFile = Scene::ROOT_PATH + "mesh.vsh";
+		std::string fragmentFile = Scene::ROOT_PATH + "mesh.fsh";
+		std::string vertexShader, fragmentShader;
+		Utils::readFile(vertexFile, vertexShader);
+		Utils::readFile(fragmentFile, fragmentShader);
+		mShaderProgram = mShaderManager.createProgram(vertexShader.c_str(), fragmentShader.c_str());
 		mVertexShader = mShaderManager.getVertexShader();
 		mFragmentShader = mShaderManager.getFragmentShader();
 	}

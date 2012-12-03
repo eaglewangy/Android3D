@@ -70,9 +70,9 @@ GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragme
 	GLuint program = glCreateProgram();
 	if (program) {
 		glAttachShader(program, vertexShader);
-		checkGlError("glAttachShader");
+		Utils::checkGlError("glAttachShader");
 		glAttachShader(program, fragmentShader);
-		checkGlError("glAttachShader");
+		Utils::checkGlError("glAttachShader");
 		glLinkProgram(program);
 		GLint linkStatus = GL_FALSE;
 		glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);

@@ -225,11 +225,11 @@ bool Scene::initialize()
         return false;
     }
 
-    printGLString("Vendor: ", GL_VENDOR);
-    printGLString("Version: ", GL_VERSION);
-    printGLString("Renderer: ", GL_RENDERER);
-    printGLString("Shading Language Version: ", GL_SHADING_LANGUAGE_VERSION);
-    printGLString("Extensions: ", GL_EXTENSIONS);
+    Utils::printGLString("Vendor: ", GL_VENDOR);
+    Utils::printGLString("Version: ", GL_VERSION);
+    Utils::printGLString("Renderer: ", GL_RENDERER);
+    Utils::printGLString("Shading Language Version: ", GL_SHADING_LANGUAGE_VERSION);
+    Utils::printGLString("Extensions: ", GL_EXTENSIONS);
 
     glViewport(0, 0, mWidth, mHeight);
 
