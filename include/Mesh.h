@@ -79,6 +79,15 @@ protected:
 	GLuint     mSamplerLocation;
 	GLuint     mTextureVBO;
 
+	GLfloat*   mNormal;
+	int        mNormalSize;
+	GLuint     mNormalLocation;
+	GLuint     mEnableLight;
+	GLuint     mLightDirectionLoc;
+	GLuint     mMVMatrixLoc;
+	glm::mat4  mMVMatrix;
+	GLuint     mNormalVBO;
+
 	GLfloat*   mColors;
 	int        mColorSize;
 	GLuint     mColorLocation;
@@ -94,6 +103,7 @@ protected:
 	glm::vec3* mTanslateVec;
 	glm::vec3* mRotateVec;
 	glm::vec3* mScaleVec;
+	glm::mat4  mTransform;
 
 	ShaderManager mShaderManager;
 	/* shader program */

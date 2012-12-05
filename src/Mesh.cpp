@@ -25,6 +25,8 @@
 #include "Image.h"
 #include "Utils.h"
 
+#include <glm/gtc/matrix_inverse.hpp>
+
 namespace android3d
 {
 
@@ -49,6 +51,12 @@ mEnableTextureLocation(-1),
 mTextureData(NULL),
 mSamplerLocation(-1),
 mTextureVBO(0),
+mNormal(NULL),
+mNormalSize(0),
+mNormalLocation(-1),
+mEnableLight(false),
+mMVMatrixLoc(-1),
+mNormalVBO(0),
 mColors(NULL),
 mColorSize(0),
 mColorVBO(0),
@@ -71,6 +79,7 @@ Mesh::~Mesh()
 	FREEANDNULL(mRotateVec);
 	FREEANDNULL(mScaleVec);
 	FREEANDNULL(mUVS);
+	FREEANDNULL(mNormal);
 	DELETEANDNULL(mTextureImage, false);
 	DELETEANDNULL(mTextureData, true);
 
@@ -89,6 +98,8 @@ Mesh::~Mesh()
 	mColorVBO = 0;
 	glDeleteBuffers(1, &mTextureVBO);
 	mTextureVBO = 0;
+	glDeleteBuffers(1, &mNormalVBO);
+	mNormalVBO = 0;
 
 	mShaderProgram = 0;
 	mVertexShader = 0;
@@ -182,6 +193,15 @@ void Mesh::setColors(GLfloat* colors, int size)
 	mColorSize = size;
 }
 
+void Mesh::setNormals(GLfloat* normals, int size)
+{
+	FREEANDNULL(mNormal);
+	mNormal = (GLfloat *) malloc(size);
+	memcpy(mNormal, normals, size);
+
+	mNormalSize = size;
+}
+
 void Mesh::setEnabled(GLboolean enabled)
 {
 	mVertexEnabled = enabled;
@@ -206,7 +226,7 @@ void Mesh::initGlCmds()
 	}
 	if (mShaderProgram == 0)
 	{
-		LOGE("In Mesh::initGlCmds() create shader failed.");
+		//LOGE("In Mesh::initGlCmds() create shader failed.");
 		return;
 	}
 	mMVPMatrixLocation = glGetUniformLocation(mShaderProgram, "u_mvpMatrix");
@@ -216,6 +236,10 @@ void Mesh::initGlCmds()
 	mEnableTextureLocation = glGetUniformLocation(mShaderProgram, "u_enableTexture");
 	mColorLocation = glGetAttribLocation(mShaderProgram, "a_vcolor");
 	mEnableColorLocation = glGetUniformLocation(mShaderProgram, "u_enableVertexColor");
+	mNormalLocation =  glGetAttribLocation(mShaderProgram, "a_normal");
+	mEnableLight = glGetUniformLocation(mShaderProgram, "u_enableLight");
+	mLightDirectionLoc = glGetUniformLocation(mShaderProgram, "u_lightDir");
+	mMVMatrixLoc = glGetUniformLocation(mShaderProgram, "u_mvMatrix");
 
 	mModelMatrix = glm::mat4(1.0);
 
@@ -301,6 +325,17 @@ void Mesh::initGlCmds()
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
 	}
 
+	if (mNormal != NULL)
+	{
+		glGenBuffers(1, &mNormalVBO);
+		// Bind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, mNormalVBO);
+		// Set the buffer's data
+		glBufferData(GL_ARRAY_BUFFER, mNormalSize, mNormal, GL_STATIC_DRAW);
+		// Unbind the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
 	mGLHasInitialized = true;
 }
 
@@ -356,13 +391,35 @@ void Mesh::render()
 		glDisableVertexAttribArray(mEnableColorLocation);
 	}
 
+	mTransform = mMVPMatrix * mModelMatrix;
+	if (mNormal != NULL)
+	{
+		/*glUniform1i(mEnableLight, 1);
+
+		glm::vec4 lightDir = glm::vec4(1.0, 0.0, 1.0, 0.0);
+		glUniform4fv(mLightDirectionLoc, 1, glm::value_ptr(lightDir));
+		mLightDirectionLoc = glGetUniformLocation(mShaderProgram, "u_lightDir");
+		//mMVPMatrix = Scene::getInstance()->getCamera()->getMVP();
+		mMVMatrix = glm::inverse(Scene::getInstance()->getCamera()->getProjectMatrix()) * mTransform;
+		glUniformMatrix4fv(mMVMatrixLoc, 1, GL_FALSE, glm::value_ptr(mMVMatrix));
+
+		glBindBuffer(GL_ARRAY_BUFFER, mNormalVBO);
+		glVertexAttribPointer(mNormalLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+		glEnableVertexAttribArray(mNormalLocation);*/
+	}
+	else
+	{
+		glUniform1i(mEnableLight, 0);
+		glDisableVertexAttribArray(mNormalLocation);
+	}
+
 	/*static int count;
 	++count;
 	if (count == 1)
 	   printMatrix(const_cast<float*>(glm::value_ptr(camera->getMVP() * mModelMatrix)), 1);
 	*/
 
-	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mMVPMatrix * mModelMatrix));
+	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mTransform));
 
 	if (mVertexIndex != NULL)
 	{

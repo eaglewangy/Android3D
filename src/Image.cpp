@@ -359,6 +359,7 @@ void Image::read_jpeg()
 		for(int i= 0; i < row_stride; i++)
 		    image[index++] = buffer[0][i];
 	}
+	flipBufferByVertical(image, row_stride, cinfo.output_height);
 	mData = image;
 
 	/* Step 7: Finish decompression */
@@ -389,6 +390,45 @@ void Image::read_jpeg()
 unsigned char* Image::getData()
 {
 	return mData;
+}
+
+bool Image::flipBufferByVertical(unsigned char* input, int widthBytes, int height)
+{
+	unsigned char* tb1;
+	unsigned char* tb2;
+
+	if (input == NULL)
+		return false;
+
+	int size = widthBytes;
+
+	tb1 = (unsigned char *)new unsigned char[size];
+	if (tb1 == NULL)
+		return false;
+
+	tb2 = (unsigned char*)new unsigned char[size];
+	if (tb2 == NULL) {
+		delete[] tb1;
+		return false;
+	}
+
+	int rowCount = -1;
+	long offset1 = 0;
+	long offset2 = 0;
+
+	for (rowCount = 0; rowCount < (height + 1)/2; rowCount++) {
+		offset1 = rowCount * size;
+		offset2 = ((height-1) - rowCount) * size;
+
+		memcpy(tb1,input + offset1, size);
+		memcpy(tb2,input + offset2, size);
+		memcpy(input + offset1, tb2, size);
+		memcpy(input + offset2, tb1, size);
+	}
+
+	delete [] tb1;
+	delete [] tb2;
+	return true;
 }
 
 } //end namespace

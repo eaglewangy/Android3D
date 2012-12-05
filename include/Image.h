@@ -59,6 +59,9 @@ private:
 
 	void read_png();
 	void read_jpeg();
+
+	/* vertically flip a buffer, note, this operates on a buffer of widthBytes bytes, not pixels!*/
+	bool flipBufferByVertical(unsigned char* input, int widthBytes, int height);
 };
 
 } //end namespace

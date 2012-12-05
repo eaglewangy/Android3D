@@ -118,6 +118,12 @@ GLushort gSquareIndex[] = {
     0, 1, 2,
     0, 2, 3
 };
+GLfloat gNormal[] = {
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1
+};
 /*--------------------------------------End test data---------------------------------------*/
 
 static ANativeWindow* gWindow = NULL;
@@ -145,7 +151,7 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	triangle->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
 	triangle->setScale(3.0f, 3.0f, 3.0f);
 	//triangle->setUvs(texture, sizeof(texture));
-	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
+	triangle->setColors(gTriangleColors, sizeof(gTriangleColors));
 	triangle->setTriangleNums(1);
 	gScene->addMesh(triangle);
 
@@ -167,6 +173,7 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	square2->setScale(3.0f, 3.0f, 3.0f);
 	square2->setPosition(3.0f, -5.0f, 0.0f);
 	square2->setUvs(texture, sizeof(texture));
+	square2->setNormals(gNormal, sizeof(gNormal));
 	texturePath = android3d::Scene::ROOT_PATH + "logo.png";
 	square2->setImage(texturePath);
 	//mesh2->setColors(gTriangleColors, sizeof(gTriangleColors));
