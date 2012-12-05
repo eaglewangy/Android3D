@@ -402,7 +402,7 @@ bool Image::flipBufferByVertical(unsigned char* input, int widthBytes, int heigh
 
 	int size = widthBytes;
 
-	tb1 = (unsigned char *)new unsigned char[size];
+	tb1 = (unsigned char*)new unsigned char[size];
 	if (tb1 == NULL)
 		return false;
 
@@ -426,8 +426,8 @@ bool Image::flipBufferByVertical(unsigned char* input, int widthBytes, int heigh
 		memcpy(input + offset2, tb1, size);
 	}
 
-	delete [] tb1;
-	delete [] tb2;
+	delete[] tb1;
+	delete[] tb2;
 	return true;
 }
 
