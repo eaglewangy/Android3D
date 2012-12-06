@@ -52,6 +52,14 @@ extern "C" {
 			pointer = NULL; \
 		}
 
+typedef struct {
+    GLsizei mWidth;
+    GLsizei mHeight;
+    GLuint  mTextureLocation;
+    GLuint  mTextureId;
+    GLint   mType;
+} Texture;
+
 #ifdef __cplusplus
 }
 #endif //

@@ -138,7 +138,7 @@ void Mesh::setImage(std::string file)
 {
 	DELETEANDNULL(mTextureImage, false);
 	mTextureImage = new Image(file);
-	mTextureImage->load();
+	//mTextureImage->loadTexture();
 }
 
 void Mesh::setIndices(GLushort* index, int size)
@@ -371,7 +371,6 @@ void Mesh::render()
 		glUniform1i(mEnableTextureLocation, 1);
 		// Set the sampler texture unit to 0
 		glUniform1i(mSamplerLocation, 0);
-		int TEX_SIZE = 128;
 		glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
 
 		glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);

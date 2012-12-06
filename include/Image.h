@@ -22,6 +22,8 @@
 #ifndef IMAGE_H_
 #define IMAGE_H_
 
+#include "android3d.h"
+
 #include <string>
 #include <GLES2/gl2.h>
 
@@ -39,24 +41,25 @@ class Image
 public:
 	Image(std::string fileName);
 	virtual ~Image();
-	/**
-	 * buffer uses to store image data
-	 */
-	void load();
 	unsigned char* getData();
 	inline int getWidth() {return mWidth;};
 	inline int getHeight() {return mHeight;};
 	inline bool hasAlpha() {return mHasAlpha;};
 
 private:
-	std::string mName;
+	Texture*       mTexture;
+	std::string    mName;
 	unsigned char* mData;
-	unsigned int mWidth;
-	unsigned int mHeight;
-	bool mHasAlpha;
+	unsigned int   mWidth;
+	unsigned int   mHeight;
+	bool           mHasAlpha;
 
-	ImageType mImageType;
+	ImageType      mImageType;
 
+	/**
+	 * buffer uses to store image data
+	 */
+	void loadTexture(std::string fileName);
 	void read_png();
 	void read_jpeg();
 

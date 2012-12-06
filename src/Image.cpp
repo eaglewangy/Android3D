@@ -76,20 +76,23 @@ mData(NULL),
 mWidth(0),
 mHeight(0),
 mImageType(TYPE_NONE),
-mHasAlpha(true)
+mHasAlpha(true),
+mTexture(NULL)
 {
+	loadTexture(mName);
 }
 
 Image::~Image()
 {
 	free(mData);
+	DELETEANDNULL(mTexture, false);
 	LOGE("Free Image...");
 }
 
-void Image::load()
+void Image::loadTexture(std::string fileName)
 {
-	int pos = mName.find_last_of(".");
-	std::string extension = mName.substr(pos + 1);
+	int pos = fileName.find_last_of(".");
+	std::string extension = fileName.substr(pos + 1);
 	std::transform(extension.begin(), extension.end(), extension.begin(), tolower);
 	if (extension == "png")
 		mImageType = TYPE_PNG;
@@ -101,7 +104,7 @@ void Image::load()
 	switch(mImageType)
 	{
 	case TYPE_NONE:
-		LOGE("No support for this type of image.(%s)", mName.c_str());
+		LOGE("No support for this type of image.(%s)", fileName.c_str());
 		break;
 	case TYPE_PNG:
 		read_png();
@@ -110,7 +113,7 @@ void Image::load()
 		read_jpeg();
 		break;
 	default:
-		LOGE("No support for this type of image.(%s)", mName.c_str());
+		LOGE("No support for this type of image.(%s)", fileName.c_str());
 		break;
 	}
 }
