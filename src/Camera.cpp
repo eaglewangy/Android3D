@@ -73,6 +73,8 @@ void Camera::updateMVP(int width, int height)
 	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(mEyex, mEyey, mEyez),
 			glm::vec3(mCenterx, mCentery, mCenterz),
 			glm::vec3(mUpx, mUpy, mUpz));
+	mViewMat = viewMatrix;
+	mProjectMat = projectionMatrix;
 	glm::mat4 modelMatrix = glm::mat4(1.0f);
 	mMVP = projectionMatrix * viewMatrix * modelMatrix;
 }

@@ -12,12 +12,9 @@ varying float v_colorfactor;
 void main() {                              
     if (u_enableTexture == 1) {
         vec4 s = texture2D(s_texture, v_texCoord);
-        gl_FragColor = s;        
+        gl_FragColor = v_colorfactor * s;        
 	}                                                 
-	else if (u_enableVertexColor == 1) {
-	    gl_FragColor = v_color ;
-	}                                                  
-	else {                                             
-	    gl_FragColor = vec4(0.0, 0.0, 1.0, 0.0);      
-	}                                                
+	else{
+	    gl_FragColor = v_color;
+	}                                                                                       
 }                                                  

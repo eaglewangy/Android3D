@@ -22,9 +22,23 @@
 #include <cstdlib>
 #include "ShaderManager.h"
 #include "Utils.h"
+#include "Scene.h"
 
 namespace android3d
 {
+std::string ShaderManager::ROOT_PATH = Scene::ROOT_PATH;
+
+ShaderManager::ShaderManager(std::string vertexFile, std::string framentFile)
+{
+	mVertexFile = ROOT_PATH + vertexFile;
+	mFragmentFile = ROOT_PATH + framentFile;
+
+	std::string vertexShader, fragmentShader;
+	Utils::readFile(mVertexFile, vertexShader);
+	Utils::readFile(mFragmentFile, fragmentShader);
+	createProgram(vertexShader.c_str(), fragmentShader.c_str());
+}
+
 GLuint ShaderManager::loadShader(GLenum shaderType, const char* source)
 {
 	GLuint shader = glCreateShader(shaderType);

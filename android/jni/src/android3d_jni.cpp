@@ -68,6 +68,38 @@ GLfloat vertices[] =
 		-1.0f, -1.0f, -1.0f   //23
 };
 
+GLfloat gCubeNoraml[] = {
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+
+		0, 0, -1,
+		0, 0, -1,
+		0, 0, -1,
+		0, 0, -1,
+
+		-1, 0, 0,
+		-1, 0, 0,
+		-1, 0, 0,
+		-1, 0, 0,
+
+		1, 0, 0,
+		1, 0, 0,
+		1, 0, 0,
+		1, 0, 0,
+
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0,
+
+		0, -1, 0,
+		0, -1, 0,
+		0, -1, 0,
+		0, -1, 0,
+};
+
 GLushort indices[] =
 {
 		0, 1, 2,
@@ -91,31 +123,36 @@ GLushort indices[] =
 
 GLfloat gTriangleVertices[] = {
 		0.5f, 0.0f, 0.0f,
+		0.0f, 0.5f, 0.0f,
 		-0.5f, 0.0f, 0.0f,
-		0.0f, 0.5f, 0.0f
 };
 GLfloat gTriangleColors[] = {
 		1.0f, 0.0f, 0.0f , 1.0f,
 		0.0f, 1.0f, 0.0f, 1.0f,
 		0.0f, 0.0f, 1.0f, 1.0f,
 };
+GLfloat gTriangleNormal[] = {
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1
+};
 
 GLfloat texture[] = {
-		0.0f, 0.0f, // TexCoord 0,
-		0.0f, 1.0f, // TexCoord 1
-		1.0f, 1.0f, // TexCoord 2
-		1.0f, 0.0f // TexCoord 3
-		};
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+};
 
 GLfloat gSquareVertex[] = {
 		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
 		0.5f, -0.5, 0.0f,
+		0.5f, 0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
 };
 
 GLushort gSquareIndex[] = {
-    0, 1, 2,
+		0, 1, 2,
     0, 2, 3
 };
 GLfloat gNormal[] = {
@@ -142,15 +179,18 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	android3d::Mesh* cube = new android3d::Mesh();
 	cube->setVertices(vertices, sizeof(vertices));
 	cube->setIndices(indices, sizeof(indices));
+	cube->setNormals(gCubeNoraml, sizeof(gCubeNoraml));
 	//mesh1->setUvs(texture, sizeof(texture));
-	cube->setPosition(-3.0f, 5.0f, 0.0f);
+	cube->setRotate(45.0f, 45.0f, 0.0f, true);
 	cube->setTriangleNums(12);
 	gScene->addMesh(cube);
 
 	android3d::Mesh* triangle = new android3d::Mesh();
 	triangle->setVertices(gTriangleVertices, sizeof(gTriangleVertices));
 	triangle->setScale(3.0f, 3.0f, 3.0f);
+	triangle->setPosition(-3.0f, 5.0f, 0.0f);
 	//triangle->setUvs(texture, sizeof(texture));
+	triangle->setNormals(gTriangleNormal, sizeof(gTriangleNormal));
 	triangle->setColors(gTriangleColors, sizeof(gTriangleColors));
 	triangle->setTriangleNums(1);
 	gScene->addMesh(triangle);

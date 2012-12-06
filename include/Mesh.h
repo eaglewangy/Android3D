@@ -45,7 +45,7 @@ public:
 	void setTriangleNums(GLint triangleNums);
 	void setEnabled(GLboolean enabled);
 	void setPosition(GLfloat x, GLfloat y, GLfloat z);
-	void setRotate(GLfloat x, GLfloat y, GLfloat z);
+	void setRotate(GLfloat x, GLfloat y, GLfloat z, bool isRotate = false);
 	void setScale(GLfloat x, GLfloat y, GLfloat z);
 
 	/**
@@ -83,9 +83,10 @@ protected:
 	int        mNormalSize;
 	GLuint     mNormalLocation;
 	GLuint     mEnableLight;
+	GLuint     mNormalMatrixLoc;
+	glm::mat3  mNormalMatrix;
 	GLuint     mLightDirectionLoc;
-	GLuint     mMVMatrixLoc;
-	glm::mat4  mMVMatrix;
+	glm::vec4  mDirectionalLightDir;
 	GLuint     mNormalVBO;
 
 	GLfloat*   mColors;
@@ -105,11 +106,13 @@ protected:
 	glm::vec3* mScaleVec;
 	glm::mat4  mTransform;
 
-	ShaderManager mShaderManager;
+	ShaderManager* mShaderManager;
 	/* shader program */
 	static GLuint mShaderProgram;
 	static GLint  mVertexShader;
 	static GLint  mFragmentShader;
+
+	bool mIsRotated;
 }; //end mesh
 
 } //end namespace

@@ -55,7 +55,9 @@ mNormal(NULL),
 mNormalSize(0),
 mNormalLocation(-1),
 mEnableLight(false),
-mMVMatrixLoc(-1),
+mDirectionalLightDir(NULL),
+mLightDirectionLoc(-1),
+mNormalMatrixLoc(-1),
 mNormalVBO(0),
 mColors(NULL),
 mColorSize(0),
@@ -66,7 +68,9 @@ mTanslateVec(NULL),
 mRotateVec(NULL),
 mScaleVec(NULL),
 mMVPMatrixLocation(-1),
-mGLHasInitialized(false)
+mGLHasInitialized(false),
+mIsRotated(false),
+mShaderManager(NULL)
 {
 	memset(mVertexVBO, 0, sizeof(mVertexVBO));
 }
@@ -101,6 +105,7 @@ Mesh::~Mesh()
 	glDeleteBuffers(1, &mNormalVBO);
 	mNormalVBO = 0;
 
+	DELETEANDNULL(mShaderManager, false);
 	mShaderProgram = 0;
 	mVertexShader = 0;
 	mFragmentShader = 0;
@@ -162,7 +167,7 @@ void Mesh::setPosition(GLfloat x, GLfloat y, GLfloat z)
 	mTanslateVec->z = z;
 }
 
-void Mesh::setRotate(GLfloat x, GLfloat y, GLfloat z)
+void Mesh::setRotate(GLfloat x, GLfloat y, GLfloat z, bool isRotate)
 {
 	if (mRotateVec == NULL)
 	{
@@ -171,6 +176,8 @@ void Mesh::setRotate(GLfloat x, GLfloat y, GLfloat z)
 	mRotateVec->x = x;
 	mRotateVec->y = y;
 	mRotateVec->z = z;
+
+	mIsRotated = isRotate;
 }
 
 void Mesh::setScale(GLfloat x, GLfloat y, GLfloat z)
@@ -215,14 +222,11 @@ void Mesh::initGlCmds()
 		mVertexShader == 0 &&
 		mFragmentShader == 0)
 	{
-		std::string vertexFile = Scene::ROOT_PATH + "mesh.vsh";
-		std::string fragmentFile = Scene::ROOT_PATH + "mesh.fsh";
-		std::string vertexShader, fragmentShader;
-		Utils::readFile(vertexFile, vertexShader);
-		Utils::readFile(fragmentFile, fragmentShader);
-		mShaderProgram = mShaderManager.createProgram(vertexShader.c_str(), fragmentShader.c_str());
-		mVertexShader = mShaderManager.getVertexShader();
-		mFragmentShader = mShaderManager.getFragmentShader();
+		DELETEANDNULL(mShaderManager, false);
+		mShaderManager = new ShaderManager("mesh.vsh", "mesh.fsh");
+		mShaderProgram = mShaderManager->getProgram();
+		mVertexShader = mShaderManager->getVertexShader();
+		mFragmentShader = mShaderManager->getFragmentShader();
 	}
 	if (mShaderProgram == 0)
 	{
@@ -239,7 +243,7 @@ void Mesh::initGlCmds()
 	mNormalLocation =  glGetAttribLocation(mShaderProgram, "a_normal");
 	mEnableLight = glGetUniformLocation(mShaderProgram, "u_enableLight");
 	mLightDirectionLoc = glGetUniformLocation(mShaderProgram, "u_lightDir");
-	mMVMatrixLoc = glGetUniformLocation(mShaderProgram, "u_mvMatrix");
+	mNormalMatrixLoc = glGetUniformLocation(mShaderProgram, "u_normalMatrix");
 
 	mModelMatrix = glm::mat4(1.0);
 
@@ -334,7 +338,16 @@ void Mesh::initGlCmds()
 		glBufferData(GL_ARRAY_BUFFER, mNormalSize, mNormal, GL_STATIC_DRAW);
 		// Unbind the VBO
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		mDirectionalLightDir = glm::vec4(0.0, 0.0, 1.0, 0.0);
+		mLightDirectionLoc = glGetUniformLocation(mShaderProgram, "u_lightDir");
+		glm::mat4 projectMat = Scene::getInstance()->getCamera()->getProjextMatrix();
+		glm::mat4 viewMat = Scene::getInstance()->getCamera()->getViewMatrix();
+		glm::mat4 viewModelMat = viewMat * mModelMatrix;
+		mNormalMatrix = glm::mat3(viewModelMat);
 	}
+
+	mTransform = mMVPMatrix * mModelMatrix;
 
 	mGLHasInitialized = true;
 }
@@ -391,21 +404,16 @@ void Mesh::render()
 		glDisableVertexAttribArray(mEnableColorLocation);
 	}
 
-	mTransform = mMVPMatrix * mModelMatrix;
 	if (mNormal != NULL)
 	{
-		/*glUniform1i(mEnableLight, 1);
+		glUniform1i(mEnableLight, 1);
 
-		glm::vec4 lightDir = glm::vec4(1.0, 0.0, 1.0, 0.0);
-		glUniform4fv(mLightDirectionLoc, 1, glm::value_ptr(lightDir));
-		mLightDirectionLoc = glGetUniformLocation(mShaderProgram, "u_lightDir");
-		//mMVPMatrix = Scene::getInstance()->getCamera()->getMVP();
-		mMVMatrix = glm::inverse(Scene::getInstance()->getCamera()->getProjectMatrix()) * mTransform;
-		glUniformMatrix4fv(mMVMatrixLoc, 1, GL_FALSE, glm::value_ptr(mMVMatrix));
+		glUniform4fv(mLightDirectionLoc, 1, glm::value_ptr(mDirectionalLightDir));
+		glUniformMatrix3fv(mNormalMatrixLoc, 1, GL_FALSE, glm::value_ptr(mNormalMatrix));
 
 		glBindBuffer(GL_ARRAY_BUFFER, mNormalVBO);
 		glVertexAttribPointer(mNormalLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-		glEnableVertexAttribArray(mNormalLocation);*/
+		glEnableVertexAttribArray(mNormalLocation);
 	}
 	else
 	{

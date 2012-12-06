@@ -25,21 +25,28 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <string>
+
 namespace android3d
 {
 
 class ShaderManager
 {
 public:
-	GLuint createProgram(const char* vertexSource, const char* fragmentSource);
+	ShaderManager(std::string vertexFile, std::string framentFile);
 	GLuint getVertexShader() {return mVetexShader;}
 	GLuint getFragmentShader() {return mFragmentShader;}
-	GLuint getProgram() {return  mProgram;}
+	GLuint getProgram() {return mProgram;}
 private:
 	GLuint loadShader(GLenum shaderType, const char* source);
+	GLuint createProgram(const char* vertexSource, const char* fragmentSource);
 	GLuint mVetexShader;
 	GLuint mFragmentShader;
 	GLuint mProgram;
+	std::string mVertexFile;
+	std::string mFragmentFile;
+
+	static std::string ROOT_PATH;
 };
 
 }//end namespace

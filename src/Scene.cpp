@@ -260,6 +260,9 @@ void Scene::drawFrame()
 	glClearColor(0.5f, 0.5f, 0.5f, 1);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
     clock_t time = clock() / (CLOCKS_PER_SEC / 1000);
     time = time % 4000L;

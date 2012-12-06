@@ -1,7 +1,7 @@
 precision highp float;
 
 uniform mat4 u_mvpMatrix;
-uniform mat4 u_mvMatrix;
+uniform mat3 u_normalMatrix;
 uniform lowp int u_enableTexture;               
 uniform lowp int u_enableVertexColor;  
 uniform vec4 u_lightDir;                     
@@ -18,21 +18,25 @@ varying float v_colorfactor;
 
 void main() {                               
     gl_Position = u_mvpMatrix * vPosition;       
-	if(u_enableTexture == 1) {                  
-	    v_texCoord = a_texCoord;                  
-	}                                            
-	if (u_enableVertexColor == 1){             
-	    v_color = a_vcolor;                       
-	}
-	float factor = 1.0;
+	
 	if (u_enableLight == 1){
-	    //vec3 N = u_mvMatrix * a_normal; 
-	    //vec3 L = u_lightDir.xyz;
-	    //factor = max(dot(N, L), 0.0);
+	    vec3 N = u_normalMatrix * a_normal; 
+	    vec3 L = u_lightDir.xyz;
+	    v_colorfactor = max(dot(N, L), 0.0);
 	}else{
-	    factor = 1.0;
+	    v_colorfactor = 1.0;
 	}
 	
-	v_color = factor * a_vcolor;
+	if(u_enableTexture == 1) {                  
+	    v_texCoord = a_texCoord;             
+	}                                            
+	else if (u_enableVertexColor == 1){             
+	    v_color = v_colorfactor * a_vcolor;                       
+	}
+	else{
+	    v_color = v_colorfactor * vec4(0.0, 0.0, 1.0, 0.0); 
+	}
+	
+	//v_color = v_colorfactor * a_vcolor;
 	v_color.a = a_vcolor.a; 
 }                                             
