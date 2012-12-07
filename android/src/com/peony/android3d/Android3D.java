@@ -23,6 +23,8 @@ package com.peony.android3d;
 import com.peony.android3d.util.AssetsUtils;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -31,12 +33,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.util.Log;
 
-
 public class Android3D extends Activity implements SurfaceHolder.Callback {
-
     private static String TAG = "android3d";
     
     private Surface mSurface;
+    private boolean mNeedRestart = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,13 +57,19 @@ public class Android3D extends Activity implements SurfaceHolder.Callback {
     	}});
     	
     	AssetsUtils.copyFiles(this);
+    	mNeedRestart = false;
     }
 
     @Override
     protected void onResume() {
-        super.onResume();
-        Log.i(TAG, "onResume()");
-        nativeOnResume();
+    	super.onResume();
+
+    	Log.i(TAG, "onResume()");
+    	if (mNeedRestart){
+    		nativeOnCreate();
+    	}
+
+    	nativeOnResume();
     }
     
     @Override
@@ -70,6 +77,8 @@ public class Android3D extends Activity implements SurfaceHolder.Callback {
         super.onPause();
         Log.i(TAG, "onPause()");
         nativeOnPause();
+        
+        mNeedRestart = true;
     }
 
     @Override
@@ -77,21 +86,30 @@ public class Android3D extends Activity implements SurfaceHolder.Callback {
         super.onDestroy();
         Log.i(TAG, "onStop()");
         nativeOnStop();
-        finish();
+    }
+    
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+    	super.onConfigurationChanged(newConfig);
+    	Log.e(TAG, "Orientition has changed.");
+    	Intent intent = new Intent(this, Android3D.class);
+    	startActivity(intent);
+    	this.finish();
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
     	mSurface = holder.getSurface();
+    	Log.v(TAG, "Surface changes to width: " + String.valueOf(w) + ", height: " + String.valueOf(h));
         nativeSetSurface(mSurface);
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
+    	Log.v(TAG, "Surface created.");
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         nativeSetSurface(null);
     }
-
 
     public static native void nativeOnCreate();
     public static native void nativeOnResume();

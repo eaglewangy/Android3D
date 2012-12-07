@@ -53,11 +53,11 @@ extern "C" {
 		}
 
 typedef struct {
-    GLsizei mWidth;
-    GLsizei mHeight;
-    GLuint  mTextureLocation;
-    GLuint  mTextureId;
-    GLint   mType;
+    GLsizei width;
+    GLsizei height;
+    GLuint  textureLocation;
+    GLuint  textureId;
+    GLint   type;
 } Texture;
 
 #ifdef __cplusplus
