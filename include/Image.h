@@ -47,12 +47,12 @@ public:
 	inline bool hasAlpha() {return mHasAlpha;};
 
 private:
-	Texture*       mTexture;
 	std::string    mName;
 	unsigned char* mData;
 	unsigned int   mWidth;
 	unsigned int   mHeight;
 	bool           mHasAlpha;
+	int            mPixelFormat;
 
 	ImageType      mImageType;
 

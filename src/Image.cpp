@@ -76,8 +76,8 @@ mData(NULL),
 mWidth(0),
 mHeight(0),
 mImageType(TYPE_NONE),
-mHasAlpha(true),
-mTexture(NULL)
+mPixelFormat(0),
+mHasAlpha(true)
 {
 	loadTexture(mName);
 }
@@ -85,7 +85,6 @@ mTexture(NULL)
 Image::~Image()
 {
 	free(mData);
-	DELETEANDNULL(mTexture, false);
 	LOGE("Free Image...");
 }
 
@@ -210,7 +209,7 @@ void Image::read_png()
 
 	// Allocate the image_data as a big block, to be given to opengl
 	png_byte* image_data;
-	int size = (size_t)rowbytes * height * sizeof(png_byte)+15;
+	int size = (size_t)rowbytes * height * sizeof(png_byte) + 15;
 	image_data = (png_byte*)malloc(size);
 	if (image_data == NULL)
 	{
@@ -253,11 +252,11 @@ void Image::read_png()
 	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 
 	mData = image_data;
+	mPixelFormat = GL_RGBA;
 	free(row_pointers);
 	fclose(fp);
 }
 
-#if 1
 void Image::read_jpeg()
 {
 	/* This struct contains the JPEG decompression parameters and pointers to
@@ -364,6 +363,7 @@ void Image::read_jpeg()
 	}
 	flipBufferByVertical(image, row_stride, cinfo.output_height);
 	mData = image;
+	mPixelFormat = GL_RGB;
 
 	/* Step 7: Finish decompression */
 
@@ -388,7 +388,6 @@ void Image::read_jpeg()
 	 * warnings occurred (test whether jerr.pub.num_warnings is nonzero).
 	 */
 }
-#endif
 
 unsigned char* Image::getData()
 {

@@ -39,9 +39,11 @@ public:
 	void setCenter(float centerx, float centery, float centerz);
 	void setUp(float upx, float upy, float upz);
 	glm::mat4& getMVP() {return mMVP;}
+	glm::mat4& getHudMVP() {return mHudMVP;}
 	glm::mat4& getViewMatrix() {return mViewMat;}
 	glm::mat4& getProjextMatrix() {return mProjectMat;}
 	void updateMVP(int width, int height);
+	void updateHudMVP(int left, int right, int bottom, int top);
 
 private:
 	float mEyex;
@@ -55,6 +57,7 @@ private:
 	float mUpz;
 
 	glm::mat4 mMVP;
+	glm::mat4 mHudMVP;
 	glm::mat4 mViewMat;
 	glm::mat4 mProjectMat;
 
