@@ -107,10 +107,6 @@ protected:
 	glm::mat4  mTransform;
 
 	ShaderManager* mShaderManager;
-	/* shader program */
-	static GLuint mShaderProgram;
-	static GLint  mVertexShader;
-	static GLint  mFragmentShader;
 
 	bool mIsRotated;
 }; //end mesh

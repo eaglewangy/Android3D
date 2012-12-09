@@ -37,6 +37,7 @@ public:
 	GLuint getVertexShader() {return mVetexShader;}
 	GLuint getFragmentShader() {return mFragmentShader;}
 	GLuint getProgram() {return mProgram;}
+	~ShaderManager();
 private:
 	GLuint loadShader(GLenum shaderType, const char* source);
 	GLuint createProgram(const char* vertexSource, const char* fragmentSource);

@@ -34,11 +34,10 @@ static JavaVM* gJVM = NULL;
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved);
 JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *jvm, void *reserved);
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnCreate(JNIEnv* jenv, jobject obj);
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv* jenv, jobject obj);
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnPause(JNIEnv* jenv, jobject obj);
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnStop(JNIEnv* jenv, jobject obj);
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeSetSurface(JNIEnv* jenv, jobject obj, jobject surface);
+
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject obj, jint width, jint height);
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3DLib_step(JNIEnv* jenv, jobject obj);
+JNIEXPORT void JNICALL Java_com_peony_android3d_Android3DLib_destroy(JNIEnv* jenv, jobject obj);
 };
 
 #ifdef __cplusplus

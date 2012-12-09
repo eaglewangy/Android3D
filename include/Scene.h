@@ -49,16 +49,10 @@ public:
     static void release();
 
     static Scene* getInstance();
+    bool prepareScene(int width, int height);
+    void drawFrame();
     static std::string ROOT_PATH;
 
-    /*
-     * Following methods can be called from any thread.
-     * They send message to render thread which executes required actions.
-    */
-    void start();
-    void stop();
-    void setWindow(ANativeWindow* window);
-    
     Camera* getCamera() {return mCamera;}
 
     void addMesh(Mesh* mesh);
@@ -67,37 +61,9 @@ private:
     Scene();
     static Scene* mInstance;
 
-    enum RenderMessage {
-        MSG_NONE = 0,
-        MSG_WINDOW_SET,
-        MSG_RENDER_EXIT
-    };
-
-    pthread_t mThreadID;
-    pthread_mutex_t mMutex;
-    enum RenderMessage mMsg;
-    
-    // android window, supported by NDK r5 and newer
-    ANativeWindow* mWindow;
-
-    EGLDisplay mDisplay;
-    EGLSurface mSurface;
-    EGLContext mContext;
     int mWidth;
     int mHeight;
     
-    // RenderLoop is called in a rendering thread started in start() method
-    // It creates rendering context and renders scene until stop() is called
-    void render();
-    
-    bool initialize();
-    void destroy();
-
-    void drawFrame();
-
-    // Helper method for starting the thread 
-    static void* renderThread(void *myself);
-
     /*
      * Scene model, view, project matrix
      *

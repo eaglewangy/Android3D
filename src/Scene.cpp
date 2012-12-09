@@ -36,30 +36,31 @@ Scene* Scene::mInstance = NULL;
 std::string Scene::ROOT_PATH = "/data/data/com.peony.android3d/files/";
 
 Scene::Scene() :
-mDisplay(NULL),
-mSurface(NULL),
-mContext(NULL),
 mWidth(0),
-mHeight(0),
-mWindow(NULL),
-mMsg(MSG_NONE),
-mThreadID(-1)
+mHeight(0)
 {
-    LOGI("Scene is created");
-    pthread_mutex_init(&mMutex, NULL);
-    mCamera = new Camera();
+	Utils::printGLString("Vendor: ", GL_VENDOR);
+	Utils::printGLString("Version: ", GL_VERSION);
+	Utils::printGLString("Renderer: ", GL_RENDERER);
+	Utils::printGLString("Shading Language Version: ", GL_SHADING_LANGUAGE_VERSION);
+	Utils::printGLString("Extensions: ", GL_EXTENSIONS);
+
+	mCamera = new Camera();
 }
 
 Scene::~Scene()
 {
     LOGI("Scene is destroyed");
-    pthread_mutex_destroy(&mMutex);
     if (mCamera != NULL)
+    {
     	delete mCamera;
+    	mCamera = NULL;
+    }
 
     for (int i = 0; i < mMeshes.size(); ++i)
     {
     	delete mMeshes[i];
+    	mMeshes[i] = NULL;
     }
 }
 
@@ -81,178 +82,16 @@ Scene* Scene::getInstance()
 	return mInstance;
 }
 
-void Scene::start()
+bool Scene::prepareScene(int width, int height)
 {
-    LOGI("Creating renderer thread");
-    pthread_create(&mThreadID, NULL, renderThread, this);
-    return;
-}
-
-void Scene::stop()
-{
-    LOGI("Stopping renderer thread");
-
-    // send message to render thread to stop rendering
-    pthread_mutex_lock(&mMutex);
-    mMsg = MSG_RENDER_EXIT;
-    pthread_mutex_unlock(&mMutex);
-
-    pthread_join(mThreadID, 0);
-    LOGI("Renderer thread stopped");
-
-    return;
-}
-
-void Scene::setWindow(ANativeWindow *window)
-{
-    // notify render thread that window has changed
-    pthread_mutex_lock(&mMutex);
-    mMsg = MSG_WINDOW_SET;
-    mWindow = window;
-    pthread_mutex_unlock(&mMutex);
-
-    return;
-}
-
-void Scene::render()
-{
-    bool renderingEnabled = true;
-    while (renderingEnabled) {
-
-        pthread_mutex_lock(&mMutex);
-
-        // process incoming messages
-        switch (mMsg) {
-
-            case MSG_WINDOW_SET:
-                initialize();
-                break;
-
-            case MSG_RENDER_EXIT:
-                renderingEnabled = false;
-                destroy();
-                break;
-
-            default:
-                break;
-        }
-        mMsg = MSG_NONE;
-        
-        if (mDisplay) {
-            drawFrame();
-            if (!eglSwapBuffers(mDisplay, mSurface)) {
-                LOGE("eglSwapBuffers() returned error %d", eglGetError());
-            }
-        }
-        
-        pthread_mutex_unlock(&mMutex);
-    }
-    
-    LOGI("Render loop exits");
-    
-    return;
-}
-
-bool Scene::initialize()
-{
-    const EGLint configAttribs[] = {
-    	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_BLUE_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_RED_SIZE, 8,
-        EGL_NONE
-    };
-
-    const EGLint contextAttrs[] = {
-         EGL_CONTEXT_CLIENT_VERSION, 2,
-         EGL_NONE
-    };
-
-    EGLConfig config;    
-    EGLint numConfigs;
-    EGLint format;
-    EGLint major, minor;
-    
-    LOGI("Initializing context");
-    
-    if ((mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY)) == EGL_NO_DISPLAY) {
-        LOGE("eglGetDisplay() returned error %d", eglGetError());
-        return false;
-    }
-    if (!eglInitialize(mDisplay, &major, &minor)) {
-        LOGE("eglInitialize() returned error %d", eglGetError());
-        return false;
-    }
-    LOGI("EGL Version: %d.%d", major, minor);
-
-    if (!eglChooseConfig(mDisplay, configAttribs, &config, 1, &numConfigs)) {
-        LOGE("eglChooseConfig() returned error %d", eglGetError());
-        destroy();
-        return false;
-    }
-
-    if (!eglGetConfigAttrib(mDisplay, config, EGL_NATIVE_VISUAL_ID, &format)) {
-        LOGE("eglGetConfigAttrib() returned error %d", eglGetError());
-        destroy();
-        return false;
-    }
-
-    ANativeWindow_setBuffersGeometry(mWindow, 0, 0, format);
-
-    if (!(mSurface = eglCreateWindowSurface(mDisplay, config, mWindow, NULL))) {
-        LOGE("eglCreateWindowSurface() returned error %d", eglGetError());
-        destroy();
-        return false;
-    }
-    
-    if (!(mContext = eglCreateContext(mDisplay, config, NULL, contextAttrs))) {
-        LOGE("eglCreateContext() returned error %d", eglGetError());
-        destroy();
-        return false;
-    }
-    
-    if (!eglMakeCurrent(mDisplay, mSurface, mSurface, mContext)) {
-        LOGE("eglMakeCurrent() returned error %d", eglGetError());
-        destroy();
-        return false;
-    }
-
-    if (!eglQuerySurface(mDisplay, mSurface, EGL_WIDTH, &mWidth) ||
-        !eglQuerySurface(mDisplay, mSurface, EGL_HEIGHT, &mHeight)) {
-        LOGE("eglQuerySurface() returned error %d", eglGetError());
-        destroy();
-        return false;
-    }
-
-    Utils::printGLString("Vendor: ", GL_VENDOR);
-    Utils::printGLString("Version: ", GL_VERSION);
-    Utils::printGLString("Renderer: ", GL_RENDERER);
-    Utils::printGLString("Shading Language Version: ", GL_SHADING_LANGUAGE_VERSION);
-    Utils::printGLString("Extensions: ", GL_EXTENSIONS);
+	mWidth = width;
+	mHeight = height;
 
     glViewport(0, 0, mWidth, mHeight);
 
     mCamera->updateMVP(mWidth, mHeight);
 
     return true;
-}
-
-void Scene::destroy() {
-    LOGI("Destroying context");
-
-    eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(mDisplay, mContext);
-    eglDestroySurface(mDisplay, mSurface);
-    eglTerminate(mDisplay);
-    
-    mDisplay = EGL_NO_DISPLAY;
-    mSurface = EGL_NO_SURFACE;
-    mContext = EGL_NO_CONTEXT;
-    mWidth = 0;
-    mHeight = 0;
-
-    return;
 }
 
 void Scene::drawFrame()
@@ -287,16 +126,6 @@ void Scene::drawFrame()
     glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mCamera->getMVP() * mModelMatrix));
     //glDrawArrays(GL_TRIANGLES, 0, 3);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);*/
-}
-
-void* Scene::renderThread(void *myself)
-{
-	Scene* scene = (Scene*)myself;
-
-	scene->render();
-    pthread_exit(0);
-    
-    return 0;
 }
 
 void Scene::addMesh(Mesh* mesh)

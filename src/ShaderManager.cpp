@@ -28,7 +28,10 @@ namespace android3d
 {
 std::string ShaderManager::ROOT_PATH = Scene::ROOT_PATH;
 
-ShaderManager::ShaderManager(std::string vertexFile, std::string framentFile)
+ShaderManager::ShaderManager(std::string vertexFile, std::string framentFile) :
+mVetexShader(0),
+mFragmentShader(0),
+mProgram(0)
 {
 	mVertexFile = ROOT_PATH + vertexFile;
 	mFragmentFile = ROOT_PATH + framentFile;
@@ -36,7 +39,20 @@ ShaderManager::ShaderManager(std::string vertexFile, std::string framentFile)
 	std::string vertexShader, fragmentShader;
 	Utils::readFile(mVertexFile, vertexShader);
 	Utils::readFile(mFragmentFile, fragmentShader);
-	createProgram(vertexShader.c_str(), fragmentShader.c_str());
+	mProgram = createProgram(vertexShader.c_str(), fragmentShader.c_str());
+}
+
+ShaderManager::~ShaderManager()
+{
+	glDeleteShader(mVetexShader);
+	glDeleteShader(mFragmentShader);
+	glDetachShader(mProgram, mVetexShader);
+	glDetachShader(mProgram, mFragmentShader);
+	glDeleteProgram(mProgram);
+
+	mVetexShader = 0;
+	mFragmentShader = 0;
+	mProgram = 0;
 }
 
 GLuint ShaderManager::loadShader(GLenum shaderType, const char* source)
@@ -85,8 +101,10 @@ GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragme
 	if (program) {
 		glAttachShader(program, vertexShader);
 		Utils::checkGlError("glAttachShader");
+		//LOGI("vertex: %d", mVetexShader);
 		glAttachShader(program, fragmentShader);
 		Utils::checkGlError("glAttachShader");
+		//LOGI("fragment: %d", mFragmentShader);
 		glLinkProgram(program);
 		GLint linkStatus = GL_FALSE;
 		glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
@@ -105,7 +123,7 @@ GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragme
 			program = 0;
 		}
 	}
-	mProgram = program;
+	LOGI("Vertext shader: %d, fragment shader: %d, program: %d", vertexShader, mFragmentShader, program);
 	return program;
 }
 

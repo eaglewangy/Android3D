@@ -26,99 +26,37 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.view.Surface;
-import android.view.SurfaceView;
-import android.view.SurfaceHolder;
-import android.view.View;
-import android.view.View.OnClickListener;
 import android.util.Log;
 
-public class Android3D extends Activity implements SurfaceHolder.Callback {
+public class Android3D extends Activity {
     private static String TAG = "android3d";
     
-    private Surface mSurface;
-    private boolean mNeedRestart = false;
-
+    private Android3DView mSurfaceView;
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
-
-    	Log.i(TAG, "onCreate()");
-
-    	nativeOnCreate();
-
-    	setContentView(R.layout.main);
-    	SurfaceView surfaceView = (SurfaceView)findViewById(R.id.surfaceview);
-    	surfaceView.getHolder().addCallback(this);
-    	surfaceView.setOnClickListener(new OnClickListener() {
-    		public void onClick(View view) {
-    			/*Toast toast = Toast.makeText(Android3D.this, "", Toast.LENGTH_LONG);
-                    toast.show();*/
-    	}});
     	
     	AssetsUtils.copyFiles(this);
-    	mNeedRestart = false;
     }
 
-    @Override
-    protected void onResume() {
-    	super.onResume();
-
-    	Log.i(TAG, "onResume()");
-    	if (mNeedRestart){
-    		nativeOnCreate();
-    	}
-
-    	nativeOnResume();
-    }
-    
-    @Override
+    @Override 
     protected void onPause() {
         super.onPause();
-        Log.i(TAG, "onPause()");
-        nativeOnPause();
-        
-        mNeedRestart = true;
+        mSurfaceView.onPause();
     }
 
-    @Override
-    protected void onStop() {
-        super.onDestroy();
-        Log.i(TAG, "onStop()");
-        nativeOnStop();
+    @Override 
+    protected void onResume() {
+        super.onResume();
+        mSurfaceView = new Android3DView(getApplication());
+    	setContentView(mSurfaceView);
+        mSurfaceView.onResume();
     }
     
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-    	super.onConfigurationChanged(newConfig);
-    	Log.e(TAG, "Orientition has changed.");
-    	Intent intent = new Intent(this, Android3D.class);
-    	startActivity(intent);
-    	this.finish();
-    }
-
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-    	mSurface = holder.getSurface();
-    	Log.v(TAG, "Surface changes to width: " + String.valueOf(w) + ", height: " + String.valueOf(h));
-        nativeSetSurface(mSurface);
-    }
-
-    public void surfaceCreated(SurfaceHolder holder) {
-    	Log.v(TAG, "Surface created.");
-    }
-
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        nativeSetSurface(null);
-    }
-
-    public static native void nativeOnCreate();
-    public static native void nativeOnResume();
-    public static native void nativeOnPause();
-    public static native void nativeOnStop();
-    public static native void nativeSetSurface(Surface surface);
-
-    static {
-        System.loadLibrary("android3d_jni");
-    }
-
+    /*@Override 
+    public void onDestroy(){
+    	super.onDestroy();
+    	Android3DLib.destroy();
+    }*/
 }

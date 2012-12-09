@@ -163,20 +163,15 @@ GLfloat gNormal[] = {
 };
 /*--------------------------------------End test data---------------------------------------*/
 
-static ANativeWindow* gWindow = NULL;
 static android3d::Scene* gScene = NULL;
-
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnCreate(JNIEnv* jenv, jobject obj)
+void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject obj, jint width, jint height)
 {
+	gScene->release();
 	gScene = android3d::Scene::getInstance();
-    return;
-}
-
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv* jenv, jobject obj)
-{
-	gScene->start();
+	gScene->prepareScene(width, height);
 
 	android3d::Mesh* cube = new android3d::Mesh();
+	cube = new android3d::Mesh();
 	cube->setVertices(vertices, sizeof(vertices));
 	cube->setIndices(indices, sizeof(indices));
 	cube->setNormals(gCubeNoraml, sizeof(gCubeNoraml));
@@ -220,33 +215,12 @@ JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnResume(JNIEnv*
 	square2->setTriangleNums(2);
 	gScene->addMesh(square2);
 
-	return;
+	LOGE("Init scene...!!!");
 }
 
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnPause(JNIEnv* jenv, jobject obj)
+void JNICALL Java_com_peony_android3d_Android3DLib_step(JNIEnv* jenv, jobject obj)
 {
-	gScene->stop();
-    return;
-}
-
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeOnStop(JNIEnv* jenv, jobject obj)
-{
-    android3d::Scene::release();
-    return;
-}
-
-JNIEXPORT void JNICALL Java_com_peony_android3d_Android3D_nativeSetSurface(JNIEnv* jenv, jobject obj, jobject surface)
-{
-    if (surface != NULL) {
-    	gWindow = ANativeWindow_fromSurface(jenv, surface);
-        LOGI("Got window %p", gWindow);
-        gScene->setWindow(gWindow);
-    } else {
-        LOGI("Releasing window");
-        ANativeWindow_release(gWindow);
-    }
-
-    return;
+	gScene->drawFrame();
 }
 
 void JNICALL assetManager(JNIEnv* env, jobject aAssetManager)
