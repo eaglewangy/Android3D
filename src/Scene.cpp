@@ -62,6 +62,11 @@ Scene::~Scene()
     	delete mMeshes[i];
     	mMeshes[i] = NULL;
     }
+    for (int i = 0; i < mImages.size(); ++i)
+    {
+    	delete mImages[i];
+    	mImages[i] = NULL;
+    }
 }
 
 void Scene::release()
@@ -109,6 +114,10 @@ void Scene::drawFrame()
     for (int i = 0 ; i < mMeshes.size(); ++i)
     {
     	mMeshes[i]->render();
+    }
+    for (int i = 0; i < mImages.size(); ++i)
+    {
+    	mImages[i]->drawImage();
     }
 
     /*glUseProgram(mShaderProgram);

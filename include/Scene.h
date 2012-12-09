@@ -22,6 +22,7 @@
 #define SCENE_H
 
 #include "Camera.h"
+#include "Image.h"
 
 #include <glm/glm.hpp> //vec3, vec4, ivec4, mat4
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective
@@ -56,6 +57,7 @@ public:
     Camera* getCamera() {return mCamera;}
 
     void addMesh(Mesh* mesh);
+    void addImage(Image* image) {mImages.push_back(image);};
 
 private:
     Scene();
@@ -76,7 +78,7 @@ private:
     Camera* mCamera;
 
     std::vector<Mesh*> mMeshes;
-
+    std::vector<Image*> mImages;
 };
 
 } //end namespace

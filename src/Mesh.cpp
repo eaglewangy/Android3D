@@ -101,8 +101,6 @@ Mesh::~Mesh()
 	DELETEANDNULL(mShaderManager, false);
 
 	mEnableColorLocation = -1;
-
-	LOGI("Delete meshes...");
 }
 
 void Mesh::setVertices(GLfloat* vertex, int size)
@@ -309,6 +307,15 @@ void Mesh::initGlCmds()
 		// Bind the texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mTextureId);
+
+		if(mTextureImage != NULL && mTextureImage->hasAlpha())
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mTextureImage->getWidth(),
+					mTextureImage->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureImage->getData());
+		else if (mTextureImage != NULL && !mTextureImage->hasAlpha())
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mTextureImage->getWidth(),
+					mTextureImage->getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, mTextureImage->getData());
+		}
 	}
 
 	if (mNormal != NULL)
@@ -357,14 +364,6 @@ void Mesh::render()
 
 		glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);
 		glEnableVertexAttribArray(mTextureLocation);
-		if(mTextureImage != NULL && mTextureImage->hasAlpha())
-		   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mTextureImage->getWidth(),
-				   mTextureImage->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureImage->getData());
-		else if (mTextureImage != NULL && !mTextureImage->hasAlpha())
-		{
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mTextureImage->getWidth(),
-							   mTextureImage->getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, mTextureImage->getData());
-		}
 	}
 	else
 	{

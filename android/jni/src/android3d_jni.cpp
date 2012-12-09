@@ -215,7 +215,8 @@ void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject ob
 	square2->setTriangleNums(2);
 	gScene->addMesh(square2);
 
-	LOGE("Init scene...!!!");
+	android3d::Image* image = new android3d::Image(texturePath);
+	gScene->addImage(image);
 }
 
 void JNICALL Java_com_peony_android3d_Android3DLib_step(JNIEnv* jenv, jobject obj)

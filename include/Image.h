@@ -23,6 +23,7 @@
 #define IMAGE_H_
 
 #include "android3d.h"
+#include "ShaderManager.h"
 
 #include <string>
 #include <GLES2/gl2.h>
@@ -46,6 +47,8 @@ public:
 	inline int getHeight() {return mHeight;};
 	inline bool hasAlpha() {return mHasAlpha;};
 
+	void drawImage();
+
 private:
 	std::string    mName;
 	unsigned char* mData;
@@ -53,9 +56,21 @@ private:
 	unsigned int   mHeight;
 	bool           mHasAlpha;
 	int            mPixelFormat;
-
 	ImageType      mImageType;
+	bool           mGLHasInitialized;
 
+	GLuint         mTextureId;
+	GLuint         mTextureVBO;
+	GLuint         mTextureLocation;
+	GLuint         mSamplerLocation;
+
+	GLuint         mMVPMatrixLocation;
+	glm::mat4      mMVPMatrix;
+	GLuint         mVetextLocation;
+	GLuint         mVertexVBO[2];
+	ShaderManager* mShaderManager;
+
+	void initGlCmds();
 	/**
 	 * buffer uses to store image data
 	 */

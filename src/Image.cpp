@@ -20,6 +20,7 @@
 
 #include "Image.h"
 #include "Utils.h"
+#include "Scene.h"
 
 #include <algorithm>
 #include <cctype>
@@ -70,6 +71,25 @@ jpeg_error_exit (j_common_ptr cinfo)
   longjmp(err->setjmp_buffer, 1);
 }
 
+GLfloat gVertex[] = {
+		-0.5f, -0.5f, 0.0f,
+		0.5f, -0.5, 0.0f,
+		0.5f, 0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+};
+
+GLushort gVertexIndex[] = {
+		0, 1, 2,
+		0, 2, 3
+};
+
+GLfloat gTexture[] = {
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+};
+
 Image::Image(std::string fileName) :
 mName(fileName),
 mData(NULL),
@@ -77,14 +97,24 @@ mWidth(0),
 mHeight(0),
 mImageType(TYPE_NONE),
 mPixelFormat(0),
-mHasAlpha(true)
+mHasAlpha(true),
+mGLHasInitialized(false),
+mMVPMatrixLocation(-1),
+mVetextLocation(-1),
+mShaderManager(NULL),
+mTextureId(-1),
+mTextureVBO(0)
 {
+	memset(mVertexVBO, 0, sizeof(mVertexVBO));
 	loadTexture(mName);
 }
 
 Image::~Image()
 {
 	free(mData);
+	glDeleteBuffers(2, mVertexVBO);
+	memset(mVertexVBO, 0, sizeof(mVertexVBO));
+	DELETEANDNULL(mShaderManager, false);
 	LOGE("Free Image...");
 }
 
@@ -115,6 +145,90 @@ void Image::loadTexture(std::string fileName)
 		LOGE("No support for this type of image.(%s)", fileName.c_str());
 		break;
 	}
+}
+
+void Image::initGlCmds()
+{
+	mMVPMatrix = Scene::getInstance()->getCamera()->getMVP();
+
+	mShaderManager = new ShaderManager("texture.vsh", "texture.fsh");
+	GLuint program = mShaderManager->getProgram();
+
+	if (program == 0)
+	{
+		LOGE("In Mesh::initGlCmds() program is 0");
+	}
+	mMVPMatrixLocation = glGetUniformLocation(program, "u_mvpMatrix");
+	mVetextLocation = glGetAttribLocation(program, "v_position");
+	mTextureLocation = glGetAttribLocation(program, "a_texCoord");
+	mSamplerLocation = glGetUniformLocation(program, "s_texture");
+
+	/*
+	 * mVertextVBO[0] store vertex attribute data.
+	 * mVertextVBO[1] store elements indices.
+	 */
+	glGenBuffers(2, mVertexVBO);
+	// Bind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
+	// Set the buffer's data
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gVertex), gVertex, GL_STATIC_DRAW);
+	// Unbind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mVertexVBO[1]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gVertexIndex), gVertexIndex, GL_STATIC_DRAW);
+	// Unbind the VBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	glGenBuffers(1, &mTextureVBO);
+	// Bind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
+	// Set the buffer's data
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gTexture), gTexture, GL_STATIC_DRAW);
+	// Unbind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glGenTextures(1, &mTextureId);
+	// Set the filtering mode
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Bind the texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, mTextureId);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
+
+	mGLHasInitialized = true;
+}
+
+void Image::drawImage()
+{
+	if (!mGLHasInitialized)
+		initGlCmds();
+
+	glUseProgram(mShaderManager->getProgram());
+	// Bind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
+	glVertexAttribPointer(mVetextLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(mVetextLocation);
+
+	// Set the sampler texture unit to 0
+	glUniform1i(mSamplerLocation, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
+
+	glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);
+	glEnableVertexAttribArray(mTextureLocation);
+
+	glm::mat4 mModelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(3, 3, 0));
+
+	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mMVPMatrix * mModelMatrix));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mVertexVBO[1]);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
+	// Unbind the VBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	// Unbind the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Image::read_png()

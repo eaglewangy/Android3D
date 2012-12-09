@@ -22,9 +22,6 @@ public class AssetsUtils {
 			}
 			String[] files = assetManager.list("android3d");
 			for (String file : files){
-				File f = new File(file);
-				if (f.exists())
-					continue;
 				InputStream input = assetManager.open("android3d/" + file);
 				OutputStream output = new FileOutputStream(fullPath + "/" + file);
 				copy(input, output);
