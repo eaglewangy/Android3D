@@ -79,9 +79,9 @@ void Camera::updateMVP(int width, int height)
 	mMVP = projectionMatrix * viewMatrix * modelMatrix;
 }
 
-void Camera::updateHudMVP(int left, int right, int bottom, int top)
+void Camera::updateHudMVP(float left, float right, float bottom, float top, float near, float far)
 {
-	mHudMVP = glm::ortho(left, right, bottom, top);
+	mHudMVP = glm::ortho(left, right, bottom, top, near, far) * mViewMat;
 }
 
 }

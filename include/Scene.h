@@ -59,6 +59,9 @@ public:
     void addMesh(Mesh* mesh);
     void addImage(Image* image) {mImages.push_back(image);};
 
+    int getWidth() {return mWidth;}
+    int getHeight() {return mHeight;}
+
 private:
     Scene();
     static Scene* mInstance;

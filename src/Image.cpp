@@ -150,6 +150,8 @@ void Image::loadTexture(std::string fileName)
 void Image::initGlCmds()
 {
 	mMVPMatrix = Scene::getInstance()->getCamera()->getMVP();
+	Scene::getInstance()->getCamera()->updateHudMVP(0, Scene::getInstance()->getWidth(), Scene::getInstance()->getHeight(), 0);
+	//mMVPMatrix = Scene::getInstance()->getCamera()->getHudMVP();
 
 	mShaderManager = new ShaderManager("texture.vsh", "texture.fsh");
 	GLuint program = mShaderManager->getProgram();
@@ -180,7 +182,7 @@ void Image::initGlCmds()
 	// Unbind the VBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	glGenBuffers(1, &mTextureVBO);
+	/*glGenBuffers(1, &mTextureVBO);
 	// Bind the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
 	// Set the buffer's data
@@ -195,7 +197,7 @@ void Image::initGlCmds()
 	// Bind the texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mTextureId);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);*/
 
 	mGLHasInitialized = true;
 }
@@ -205,6 +207,8 @@ void Image::drawImage()
 	if (!mGLHasInitialized)
 		initGlCmds();
 
+	glDisable(GL_CULL_FACE);
+
 	glUseProgram(mShaderManager->getProgram());
 	// Bind the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
@@ -212,13 +216,14 @@ void Image::drawImage()
 	glEnableVertexAttribArray(mVetextLocation);
 
 	// Set the sampler texture unit to 0
-	glUniform1i(mSamplerLocation, 0);
+	/*glUniform1i(mSamplerLocation, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
 
 	glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);
-	glEnableVertexAttribArray(mTextureLocation);
+	glEnableVertexAttribArray(mTextureLocation);*/
 
 	glm::mat4 mModelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(3, 3, 0));
+	mHudMVPMatrix = Scene::getInstance()->getCamera()->getHudMVP();
 
 	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mMVPMatrix * mModelMatrix));
 
