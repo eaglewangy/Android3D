@@ -12,3 +12,7 @@ How to configure eclipse to build.
 3. run build_native.sh to get 3rd party library and use ndk-build to build native code.
 
 If you use windows, you should set up ndk-build environment.
+
+Use Adnroid NDK in eclipse
+-Right click the Android3D project in eclipse, then Properties->C/C++ Build->Build Variables
+ ->Add, the variable name is: NDK_ROOT, Value: <your NDK root path, for example:/usr/eaglewangy/android-ndk-r8b>
