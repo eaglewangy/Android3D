@@ -18,4 +18,4 @@ Use Adnroid NDK in eclipse
 
 --Right click the Android3D project in eclipse, then Properties->C/C++ Build->Build Variables
 
- ->Add, the variable name is: NDK_ROOT, Value: <your NDK root path, for example:/usr/eaglewangy/android-ndk-r8b>
+ ->Add, the variable name is: NDK_ROOT, Value: (your NDK root path, for example:/usr/eaglewangy/android-ndk-r8b)
