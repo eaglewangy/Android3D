@@ -43,7 +43,7 @@ public:
 	glm::mat4& getViewMatrix() {return mViewMat;}
 	glm::mat4& getProjextMatrix() {return mProjectMat;}
 	void updateMVP(int width, int height);
-	void updateHudMVP(float left, float right, float bottom, float top, float near = 0.0, float far = 10.0);
+	void updateHudMVP(float left, float right, float bottom, float top, float near = -1.0, float far = 10.0);
 
 private:
 	float mEyex;

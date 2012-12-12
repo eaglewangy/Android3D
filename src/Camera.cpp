@@ -81,7 +81,17 @@ void Camera::updateMVP(int width, int height)
 
 void Camera::updateHudMVP(float left, float right, float bottom, float top, float near, float far)
 {
-	mHudMVP = glm::ortho(left, right, bottom, top, near, far) * mViewMat;
+    float ratio = right / bottom;
+	float a = 1.0f / 2;
+	float b = 1.0f / 3;
+	float ortho[16] = {
+			a, 0,  0, 0,
+			0, b,  0, 0,
+			0, 0, -1, 0,
+			0, 0,  0, 1
+	};
+
+	mHudMVP = glm::make_mat4(ortho);
 }
 
 }
