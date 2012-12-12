@@ -72,10 +72,10 @@ jpeg_error_exit (j_common_ptr cinfo)
 }
 
 GLfloat gVertex[] = {
-		-0.5f, -0.5f,
-		0.5f, -0.5,
-		0.5f, 0.5f,
-		-0.5f, 0.5f,
+		-1.0f, -1.0f,
+		1.0f, -1.0f,
+		1.0f, 1.0f,
+		-1.0f, 1.0f,
 };
 
 GLushort gVertexIndex[] = {
@@ -99,7 +99,7 @@ mImageType(TYPE_NONE),
 mPixelFormat(0),
 mHasAlpha(true),
 mGLHasInitialized(false),
-mMVPMatrixLocation(-1),
+mHudMVPMatrixLocation(-1),
 mVetextLocation(-1),
 mShaderManager(NULL),
 mTextureId(-1),
@@ -149,8 +149,6 @@ void Image::loadTexture(std::string fileName)
 
 void Image::initGlCmds()
 {
-	mMVPMatrix = Scene::getInstance()->getCamera()->getMVP();
-
 	mShaderManager = new ShaderManager("texture.vsh", "texture.fsh");
 	GLuint program = mShaderManager->getProgram();
 
@@ -158,8 +156,8 @@ void Image::initGlCmds()
 	{
 		LOGE("In Mesh::initGlCmds() program is 0");
 	}
-	mMVPMatrixLocation = glGetUniformLocation(program, "u_mvpMatrix");
-	mVetextLocation = glGetAttribLocation(program, "v_position");
+	mHudMVPMatrixLocation = glGetUniformLocation(program, "u_mvpMatrix");
+	mVetextLocation = glGetAttribLocation(program, "a_position");
 	mTextureLocation = glGetAttribLocation(program, "a_texCoord");
 	mSamplerLocation = glGetUniformLocation(program, "s_texture");
 
@@ -197,8 +195,8 @@ void Image::initGlCmds()
 	glBindTexture(GL_TEXTURE_2D, mTextureId);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
 
-	glm::mat4 mModelMatrix;//= glm::translate(glm::mat4(1.0), glm::vec3(1, 1, 0));
-	Scene::getInstance()->getCamera()->updateHudMVP(0.0, mWidth, mHeight, 0.0);
+	glm::mat4 mModelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(1, 2, 0));
+	Scene::getInstance()->getCamera()->updateHudMVP(mWidth, mHeight);
 	mHudMVPMatrix = Scene::getInstance()->getCamera()->getHudMVP() * mModelMatrix;
 
 	mGLHasInitialized = true;
@@ -224,7 +222,7 @@ void Image::drawImage()
 	glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);
 	glEnableVertexAttribArray(mTextureLocation);
 
-	glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mHudMVPMatrix));
+	glUniformMatrix4fv(mHudMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mHudMVPMatrix));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mVertexVBO[1]);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);

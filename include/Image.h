@@ -64,8 +64,7 @@ private:
 	GLuint         mTextureLocation;
 	GLuint         mSamplerLocation;
 
-	GLuint         mMVPMatrixLocation;
-	glm::mat4      mMVPMatrix;
+	GLuint         mHudMVPMatrixLocation;
 	glm::mat4      mHudMVPMatrix;
 	GLuint         mVetextLocation;
 	GLuint         mVertexVBO[2];

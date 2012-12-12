@@ -19,6 +19,7 @@
  */
 
 #include "Camera.h"
+#include "Scene.h"
 
 namespace android3d
 {
@@ -79,11 +80,12 @@ void Camera::updateMVP(int width, int height)
 	mMVP = projectionMatrix * viewMatrix * modelMatrix;
 }
 
-void Camera::updateHudMVP(float left, float right, float bottom, float top, float near, float far)
+void Camera::updateHudMVP(float width, float height)
 {
-    float ratio = right / bottom;
-	float a = 1.0f / 2;
-	float b = 1.0f / 3;
+	float sceneWidth = Scene::getInstance()->getWidth();
+	float sceneHeight = Scene::getInstance()->getHeight();
+	float a = 2.0f / sceneWidth * width;
+	float b = 2.0f / sceneHeight * height;
 	float ortho[16] = {
 			a, 0,  0, 0,
 			0, b,  0, 0,
