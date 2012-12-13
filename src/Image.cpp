@@ -71,24 +71,35 @@ jpeg_error_exit (j_common_ptr cinfo)
   longjmp(err->setjmp_buffer, 1);
 }
 
-GLfloat gVertex[] = {
+GLfloat gVertex[] =
+{
 		-1.0f, -1.0f,
 		1.0f, -1.0f,
 		1.0f, 1.0f,
 		-1.0f, 1.0f,
 };
 
-GLushort gVertexIndex[] = {
+GLushort gVertexIndex[] =
+{
 		0, 1, 2,
 		0, 2, 3
 };
 
-GLfloat gTexture[] = {
+GLfloat gTexture[] =
+{
 		0.0f, 0.0f,
 		1.0f, 0.0f,
 		1.0f, 1.0f,
 		0.0f, 1.0f,
 };
+
+//bmp file offset
+#define BMP_TORASTER_OFFSET	10
+#define BMP_SIZE_OFFSET		18
+#define BMP_BPP_OFFSET		28
+#define BMP_RLE_OFFSET		30
+#define BMP_COLOR_OFFSET	54
+#define fill4B(a)    (( 4 - ( (a) % 4 ) ) & 0x03)
 
 Image::Image(std::string fileName) :
 mName(fileName),
@@ -127,6 +138,8 @@ void Image::loadTexture(std::string fileName)
 		mImageType = TYPE_PNG;
 	else if (extension == "jpeg" || extension == "jpg")
 		mImageType = TYPE_JPEG;
+	else if (extension == "bmp")
+		mImageType = TYPE_BMP;
 	else
 		mImageType = TYPE_NONE;
 
@@ -136,15 +149,19 @@ void Image::loadTexture(std::string fileName)
 		LOGE("No support for this type of image.(%s)", fileName.c_str());
 		break;
 	case TYPE_PNG:
-		read_png();
+		load_png();
 		break;
 	case TYPE_JPEG:
-		read_jpeg();
+		load_jpeg();
+		break;
+	case TYPE_BMP:
+		load_bmp();
 		break;
 	default:
 		LOGE("No support for this type of image.(%s)", fileName.c_str());
 		break;
 	}
+	LOGE("file: %s", fileName.c_str());
 }
 
 void Image::initGlCmds(int x, int y, DrawAnchor anchor)
@@ -193,7 +210,10 @@ void Image::initGlCmds(int x, int y, DrawAnchor anchor)
 	// Bind the texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mTextureId);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
+	if (mHasAlpha)
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
+	else
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mWidth, mHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, mData);
 
 	float sceneWidth = Scene::getInstance()->getWidth();
 	float sceneHeight = Scene::getInstance()->getHeight();
@@ -275,7 +295,7 @@ void Image::drawImage(int x, int y, DrawAnchor anchor)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Image::read_png()
+void Image::load_png()
 {
 	png_byte header[8];
 	png_uint_32 width = 0;
@@ -415,7 +435,7 @@ void Image::read_png()
 	fclose(fp);
 }
 
-void Image::read_jpeg()
+void Image::load_jpeg()
 {
 	/* This struct contains the JPEG decompression parameters and pointers to
 	 * working space (which is allocated as needed by the JPEG library).
@@ -427,7 +447,7 @@ void Image::read_jpeg()
 	 */
 	struct android3d_error_mgr jerr;
 	/* More stuff */
-	FILE * infile;		/* source file */
+	FILE* infile;		/* source file */
 	JSAMPARRAY buffer;		/* Output row buffer */
 	int row_stride;		/* physical row width in output buffer */
 	unsigned char* image;
@@ -545,6 +565,172 @@ void Image::read_jpeg()
 	/* At this point you may want to check to see whether any corrupt-data
 	 * warnings occurred (test whether jerr.pub.num_warnings is nonzero).
 	 */
+}
+
+void Image::load_bmp()
+{
+	int  bpp, raster, i, j, skip, compression, width, height, index = 0;
+	GLubyte buff[4];
+	GLubyte id[2];
+	Color pallete[256];
+
+	FILE* fd = NULL;
+	if ((fd = fopen(mName.c_str(), "rb")) == NULL)
+	{
+		LOGE("Can't open %s\n", mName.c_str());
+		return;
+	}
+	//check is real bmp file
+	fread(id, 2, 1, fd);
+
+	if (!(id[0]=='B' && id[1]=='M') )
+    {
+		return;
+	}
+
+	if (fseek(fd, BMP_TORASTER_OFFSET, SEEK_SET) == -1)
+	{
+		return;
+	}
+	//read raster
+	fread (buff, 4, 1, fd);
+	raster = buff[0] + (buff[1]<<8) + (buff[2]<<16) + (buff[3]<<24);
+
+	if (fseek(fd, BMP_SIZE_OFFSET, SEEK_SET) == -1)
+	{
+		return;
+	}
+	//read width
+	fread (buff, 4, 1, fd);
+	width = buff[0] + (buff[1]<<8) + (buff[2]<<16) + (buff[3]<<24);
+	//read height
+	fread (buff, 4, 1, fd);
+	height = buff[0] + (buff[1]<<8) + (buff[2]<<16) + (buff[3]<<24);
+#ifdef DEBUG
+	LOGV("Image width: %d, height: %d.\n", width, height);
+#endif
+	mWidth = width;
+	mHeight = height;
+
+	//read compression
+	if (fseek(fd, BMP_RLE_OFFSET, SEEK_SET) == -1)
+	{
+		return;
+	}
+	fread (buff, 4, 1, fd);
+	compression = buff[0] + (buff[1]<<8) + (buff[2]<<16) + (buff[3]<<24);
+
+	if (compression != 0) {
+#ifdef DEBUG
+		LOGV("Only uncompressed bitmap is supported\n");
+#endif
+		return;
+	}
+
+	//read bpp
+	if (fseek(fd, BMP_BPP_OFFSET, SEEK_SET) == -1)
+	{
+		return;
+	}
+	//read(fd, buff, 2);
+	fread(buff, 2, 1, fd);
+	bpp = buff[0] + (buff[1]<<8);
+#ifdef DEBUG
+	LOGV("Image bpp: %d.\n", bpp);
+#endif
+	GLubyte *buffer = (GLubyte *) malloc(width * height * (bpp == 32 ? 4 : 3) * sizeof(GLubyte));
+	if (!buffer)
+	{
+		LOGE("Out of memory in Image::load_bmp().");
+		return;
+	}
+
+	GLint type = (bpp == 32 ? GL_RGBA : GL_RGB);
+	if (type == GL_RGBA)
+		mHasAlpha = true;
+	else
+		mHasAlpha = false;
+
+	switch (bpp) {
+	case 8: /* 8bit palletized */
+	skip = fill4B(width);
+	//if 8bit, read pallete first
+	fetchPallete(fd, pallete, 256);
+	fseek(fd, raster, SEEK_SET);
+	//really read image data
+	for (i = 0; i < height; i++) {
+		for (j = 0; j < width; j++)
+		{
+			//read(fd, buff, 1);
+			fread (buff, 1, 1, fd);
+			buffer[index++] = pallete[buff[0]].red;
+			buffer[index++] = pallete[buff[0]].green;
+			buffer[index++] = pallete[buff[0]].blue;
+		}
+		if (skip)
+		{
+			//read(fd, buff, skip);
+			fread (buff, skip, 1, fd);
+		}
+	}
+	break;
+	case 24: /* 24bit RGB */
+		skip = fill4B(width * 3);
+		fseek(fd, raster, SEEK_SET);
+		for (i = 0; i < height; i++) {
+			for (j = 0; j < width; j++)
+			{
+				//read(fd, buff, 3);
+				fread (buff, 3, 1, fd);
+				buffer[index++] = buff[2];
+				buffer[index++] = buff[1];
+				buffer[index++] = buff[0];
+			}
+			if (skip) {
+				//read(fd, buff, skip);
+				fread (buff, skip, 1, fd);
+			}
+		}
+		break;
+	case 32: /* 32 RGB */
+		fseek(fd, raster, SEEK_SET);
+		for (i = 0; i < height; i++) {
+			for (j = 0; j < width; j++)
+			{
+				//read(fd, buff, 3);
+				fread (buff, 4, 1, fd);
+				buffer[index++] = buff[2];
+				buffer[index++] = buff[1];
+				buffer[index++] = buff[0];
+				buffer[index++] = buff[3];
+			}
+		}
+		break;
+	default:
+#ifdef DEBUG
+		LOGV("Unsupport bpp: %d.\n", bpp);
+#endif
+		return;
+	}
+
+	mData = buffer;
+}
+
+void Image::fetchPallete(FILE *fd, Color pallete[], int count)
+{
+	GLubyte buff[4];
+	int i;
+
+	fseek(fd, BMP_COLOR_OFFSET, SEEK_SET);
+	for (i = 0; i < count; i++) {
+		//read(fd, buff, 4);
+		fread (buff, 4, 1, fd);
+		pallete[i].red = buff[2];
+		pallete[i].green = buff[1];
+		pallete[i].blue = buff[0];
+		pallete[i].alpha = buff[3];
+	}
+	return;
 }
 
 unsigned char* Image::getData()

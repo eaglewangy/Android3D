@@ -79,6 +79,7 @@ void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject ob
 	square2->setTriangleNums(2);
 	gScene->addMesh(square2);
 
+	texturePath = android3d::Scene::ROOT_PATH + "font.bmp";
 	android3d::Image* image = new android3d::Image(texturePath);
 	gScene->addImage(image);
 }

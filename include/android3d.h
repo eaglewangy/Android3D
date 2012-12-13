@@ -52,7 +52,8 @@ extern "C" {
 			pointer = NULL; \
 		}
 
-enum DrawAnchor {
+enum DrawAnchor
+{
 	NONE = 0,
     /* draw the image from screen top & left */
     TOP_LEFT,
@@ -65,6 +66,14 @@ enum DrawAnchor {
     /* draw the image from screen center */
     CENTER,
 };
+
+typedef struct
+{
+    GLubyte red;
+    GLubyte green;
+    GLubyte blue;
+    GLubyte alpha;
+} Color;
 
 #ifdef __cplusplus
 }

@@ -34,7 +34,8 @@ namespace android3d
 enum ImageType {
 	TYPE_NONE = 0,
 	TYPE_PNG,
-	TYPE_JPEG
+	TYPE_JPEG,
+	TYPE_BMP,
 };
 
 class Image
@@ -75,8 +76,10 @@ private:
 	 * buffer uses to store image data
 	 */
 	void loadTexture(std::string fileName);
-	void read_png();
-	void read_jpeg();
+	void load_png();
+	void load_jpeg();
+	void load_bmp();
+	void fetchPallete(FILE *fd, Color pallete[], int count);
 
 	/* vertically flip a buffer, note, this operates on a buffer of widthBytes bytes, not pixels!*/
 	bool flipBufferByVertical(unsigned char* input, int widthBytes, int height);
