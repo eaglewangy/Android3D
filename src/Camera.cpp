@@ -82,13 +82,9 @@ void Camera::updateMVP(int width, int height)
 
 void Camera::updateHudMVP(float width, float height)
 {
-	float sceneWidth = Scene::getInstance()->getWidth();
-	float sceneHeight = Scene::getInstance()->getHeight();
-	float a = 2.0f / sceneWidth * width;
-	float b = 2.0f / sceneHeight * height;
 	float ortho[16] = {
-			a, 0,  0, 0,
-			0, b,  0, 0,
+			1, 0,  0, 0,
+			0, 1,  0, 0,
 			0, 0, -1, 0,
 			0, 0,  0, 1
 	};

@@ -117,7 +117,7 @@ void Scene::drawFrame()
     }
     for (int i = 0; i < mImages.size(); ++i)
     {
-    	mImages[i]->drawImage();
+    	mImages[i]->drawImage(0, 0, BOTTOM_LEFT);
     }
 
     /*glUseProgram(mShaderProgram);

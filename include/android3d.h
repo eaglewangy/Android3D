@@ -53,6 +53,7 @@ extern "C" {
 		}
 
 enum DrawAnchor {
+	NONE = 0,
     /* draw the image from screen top & left */
     TOP_LEFT,
     /* draw the image from screen bottom & left, opengl es default use it */
@@ -60,7 +61,9 @@ enum DrawAnchor {
     /* draw the image from screen top & right */
     TOP_RIGHT,
     /* draw the image from screen bottom & right */
-    BOTTOM_RIGHT
+    BOTTOM_RIGHT,
+    /* draw the image from screen center */
+    CENTER,
 };
 
 #ifdef __cplusplus

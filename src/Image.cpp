@@ -147,7 +147,7 @@ void Image::loadTexture(std::string fileName)
 	}
 }
 
-void Image::initGlCmds()
+void Image::initGlCmds(int x, int y, DrawAnchor anchor)
 {
 	mShaderManager = new ShaderManager("texture.vsh", "texture.fsh");
 	GLuint program = mShaderManager->getProgram();
@@ -195,17 +195,59 @@ void Image::initGlCmds()
 	glBindTexture(GL_TEXTURE_2D, mTextureId);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
 
-	glm::mat4 mModelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(1, 2, 0));
+	float sceneWidth = Scene::getInstance()->getWidth();
+	float sceneHeight = Scene::getInstance()->getHeight();
+	float a = mWidth / sceneWidth;
+	float b = mHeight / sceneHeight;
+	int screenCoord[2];
+	float glCoord[2];
+	glm::mat4 mModelMatrix = glm::mat4(1.0);
+	switch(anchor)
+	{
+	case TOP_LEFT:
+		screenCoord[0] = mWidth/2;
+		screenCoord[1] = mHeight/2;
+		Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
+		mModelMatrix = glm::translate(mModelMatrix, glm::vec3(glCoord[0], glCoord[1], 0));
+		break;
+	case BOTTOM_LEFT:
+		screenCoord[0] = mWidth/2;
+		screenCoord[1] = sceneHeight - mHeight/2;
+		Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
+		mModelMatrix = glm::translate(mModelMatrix, glm::vec3(glCoord[0], glCoord[1], 0));
+		break;
+	case TOP_RIGHT:
+		screenCoord[0] = sceneWidth - mWidth/2;
+		screenCoord[1] = mHeight/2;
+		Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
+		mModelMatrix = glm::translate(mModelMatrix, glm::vec3(glCoord[0], glCoord[1], 0));
+		break;
+	case BOTTOM_RIGHT:
+		screenCoord[0] = sceneWidth - mWidth/2;
+		screenCoord[1] = sceneHeight - mHeight/2;
+		Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
+		mModelMatrix = glm::translate(mModelMatrix, glm::vec3(glCoord[0], glCoord[1], 0));
+		break;
+	case CENTER:
+		break;
+	default:
+		screenCoord[0] = x;
+		screenCoord[1] = y;
+		Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
+		mModelMatrix = glm::translate(mModelMatrix, glm::vec3(glCoord[0], glCoord[1], 0));
+		break;
+	}
+	mModelMatrix = glm::scale(mModelMatrix, glm::vec3(a, b, 0));
 	Scene::getInstance()->getCamera()->updateHudMVP(mWidth, mHeight);
 	mHudMVPMatrix = Scene::getInstance()->getCamera()->getHudMVP() * mModelMatrix;
 
 	mGLHasInitialized = true;
 }
 
-void Image::drawImage()
+void Image::drawImage(int x, int y, DrawAnchor anchor)
 {
 	if (!mGLHasInitialized)
-		initGlCmds();
+		initGlCmds(x, y, anchor);
 
 	glDisable(GL_CULL_FACE);
 

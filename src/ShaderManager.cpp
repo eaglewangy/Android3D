@@ -101,10 +101,8 @@ GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragme
 	if (program) {
 		glAttachShader(program, vertexShader);
 		Utils::checkGlError("glAttachShader");
-		//LOGI("vertex: %d", mVetexShader);
 		glAttachShader(program, fragmentShader);
 		Utils::checkGlError("glAttachShader");
-		//LOGI("fragment: %d", mFragmentShader);
 		glLinkProgram(program);
 		GLint linkStatus = GL_FALSE;
 		glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
@@ -123,7 +121,7 @@ GLuint ShaderManager::createProgram(const char* vertexSource, const char* fragme
 			program = 0;
 		}
 	}
-	LOGI("Vertext shader: %d, fragment shader: %d, program: %d", vertexShader, mFragmentShader, program);
+	//LOGI("Vertext shader: %d, fragment shader: %d, program: %d", vertexShader, mFragmentShader, program);
 	return program;
 }
 

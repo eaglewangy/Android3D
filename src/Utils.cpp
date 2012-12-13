@@ -19,6 +19,7 @@
  */
 
 #include "Utils.h"
+#include "Scene.h"
 
 void Utils::readFile(std::string& fileName, std::string& content)
 {
@@ -29,13 +30,24 @@ void Utils::readFile(std::string& fileName, std::string& content)
 	ifs.close();
 }
 
-void Utils::printGLString(const char *name, GLenum s) {
+void Utils::printGLString(const char *name, GLenum s)
+{
     const char *v = (const char *) glGetString(s);
     LOGI("OpenGL ES %s = %s\n", name, v);
 }
 
-void Utils::checkGlError(const char* op) {
-    for (GLint error = glGetError(); error; error = glGetError()) {
+void Utils::checkGlError(const char* op)
+{
+    for (GLint error = glGetError(); error; error = glGetError())
+    {
         LOGI("after %s() glError (0x%x)\n", op, error);
     }
+}
+
+void Utils::ScreenCoordsToGLCoords(int screenCoords[2], float glCoords[2])
+{
+	/*gl width = screen current width coord / scene width * 2 - 1; */
+	glCoords[0] = (float)screenCoords[0]/(float)android3d::Scene::getInstance()->getWidth() * 2 - 1;
+	glCoords[1] = 1 - (float)screenCoords[1]/(float)android3d::Scene::getInstance()->getHeight() * 2;
+	//LOGE("%lf, %lf", glCoords[0], glCoords[1]);
 }

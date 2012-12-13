@@ -41,6 +41,7 @@ public:
 	static void readFile(std::string& fileName, std::string& content);
 	static void printGLString(const char *name, GLenum s);
 	static void checkGlError(const char* op);
+	static void ScreenCoordsToGLCoords(int screenCoords[2], float glCoords[2]);
 };
 
 

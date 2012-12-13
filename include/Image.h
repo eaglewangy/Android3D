@@ -47,7 +47,7 @@ public:
 	inline int getHeight() {return mHeight;};
 	inline bool hasAlpha() {return mHasAlpha;};
 
-	void drawImage();
+	void drawImage(int x, int y, DrawAnchor anchor = CENTER);
 
 private:
 	std::string    mName;
@@ -70,7 +70,7 @@ private:
 	GLuint         mVertexVBO[2];
 	ShaderManager* mShaderManager;
 
-	void initGlCmds();
+	void initGlCmds(int x, int y, DrawAnchor anchor);
 	/**
 	 * buffer uses to store image data
 	 */
