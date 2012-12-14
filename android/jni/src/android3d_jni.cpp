@@ -81,7 +81,10 @@ void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject ob
 
 	texturePath = android3d::Scene::ROOT_PATH + "font.bmp";
 	android3d::Image* image = new android3d::Image(texturePath);
-	gScene->addImage(image);
+	gScene->addImage(image, 0, 0, android3d::BOTTOM_LEFT);
+	//texturePath = android3d::Scene::ROOT_PATH + "3d.png";
+	android3d::Image* image1 = new android3d::Image(texturePath);
+	gScene->addImage(image1, 0, 0, android3d::BOTTOM_RIGHT);
 }
 
 void JNICALL Java_com_peony_android3d_Android3DLib_step(JNIEnv* jenv, jobject obj)

@@ -64,8 +64,8 @@ Scene::~Scene()
     }
     for (int i = 0; i < mImages.size(); ++i)
     {
-    	delete mImages[i];
-    	mImages[i] = NULL;
+    	delete mImages[i].image;
+    	mImages[i].image = NULL;
     }
 }
 
@@ -108,16 +108,13 @@ void Scene::drawFrame()
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    clock_t time = clock() / (CLOCKS_PER_SEC / 1000);
-    time = time % 4000L;
-    float angle = 0.060f * ((int) time);
     for (int i = 0 ; i < mMeshes.size(); ++i)
     {
     	mMeshes[i]->render();
     }
     for (int i = 0; i < mImages.size(); ++i)
     {
-    	mImages[i]->drawImage(0, 0, BOTTOM_LEFT);
+    	mImages[i].image->drawImage(mImages[i].x, mImages[i].y, mImages[i].anchor);
     }
 
     /*glUseProgram(mShaderProgram);
@@ -140,6 +137,16 @@ void Scene::drawFrame()
 void Scene::addMesh(Mesh* mesh)
 {
 	mMeshes.push_back(mesh);
+}
+
+void Scene::addImage(Image* image, int x, int y, DrawAnchor anchor)
+{
+	ImageArg imageArg;
+	imageArg.image = image;
+	imageArg.x = x;
+	imageArg.y = y;
+	imageArg.anchor = anchor;
+	mImages.push_back(imageArg);
 }
 
 } //end namespace

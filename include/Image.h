@@ -44,9 +44,10 @@ public:
 	Image(std::string fileName);
 	virtual ~Image();
 	unsigned char* getData();
-	inline int getWidth() {return mWidth;};
-	inline int getHeight() {return mHeight;};
-	inline bool hasAlpha() {return mHasAlpha;};
+	inline int getWidth() {return mWidth;}
+	inline int getHeight() {return mHeight;}
+	inline bool hasAlpha() {return mHasAlpha;}
+	void deleteData();
 
 	void drawImage(int x, int y, DrawAnchor anchor = CENTER);
 

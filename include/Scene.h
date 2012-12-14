@@ -40,6 +40,13 @@
 
 namespace android3d
 {
+struct ImageArg
+{
+	Image* image;
+	int x;
+	int y;
+	DrawAnchor anchor;
+};
 
 class Mesh;
 
@@ -57,8 +64,7 @@ public:
     Camera* getCamera() {return mCamera;}
 
     void addMesh(Mesh* mesh);
-    void addImage(Image* image) {mImages.push_back(image);};
-
+    void addImage(Image* image, int x, int y, DrawAnchor anchor = CENTER);
     int getWidth() {return mWidth;}
     int getHeight() {return mHeight;}
 
@@ -81,7 +87,7 @@ private:
     Camera* mCamera;
 
     std::vector<Mesh*> mMeshes;
-    std::vector<Image*> mImages;
+    std::vector<ImageArg> mImages;
 };
 
 } //end namespace

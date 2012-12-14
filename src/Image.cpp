@@ -122,11 +122,16 @@ mTextureVBO(0)
 
 Image::~Image()
 {
-	free(mData);
+	FREEANDNULL(mData);
 	glDeleteBuffers(2, mVertexVBO);
 	memset(mVertexVBO, 0, sizeof(mVertexVBO));
 	DELETEANDNULL(mShaderManager, false);
 	LOGE("Free Image...");
+}
+
+void Image::deleteData()
+{
+	FREEANDNULL(mData);
 }
 
 void Image::loadTexture(std::string fileName)
@@ -161,7 +166,6 @@ void Image::loadTexture(std::string fileName)
 		LOGE("No support for this type of image.(%s)", fileName.c_str());
 		break;
 	}
-	LOGE("file: %s", fileName.c_str());
 }
 
 void Image::initGlCmds(int x, int y, DrawAnchor anchor)
@@ -208,12 +212,14 @@ void Image::initGlCmds(int x, int y, DrawAnchor anchor)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// Bind the texture
-	glActiveTexture(GL_TEXTURE0);
+	//glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mTextureId);
 	if (mHasAlpha)
 	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
 	else
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mWidth, mHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, mData);
+
+	deleteData();
 
 	float sceneWidth = Scene::getInstance()->getWidth();
 	float sceneHeight = Scene::getInstance()->getHeight();
@@ -277,6 +283,7 @@ void Image::drawImage(int x, int y, DrawAnchor anchor)
 	glVertexAttribPointer(mVetextLocation, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray(mVetextLocation);
 
+	glBindTexture(GL_TEXTURE_2D, mTextureId);
 	// Set the sampler texture unit to 0
 	glUniform1i(mSamplerLocation, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);

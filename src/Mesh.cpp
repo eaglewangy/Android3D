@@ -316,6 +316,8 @@ void Mesh::initGlCmds()
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mTextureImage->getWidth(),
 					mTextureImage->getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, mTextureImage->getData());
 		}
+
+		mTextureImage->deleteData();
 	}
 
 	if (mNormal != NULL)
@@ -357,6 +359,7 @@ void Mesh::render()
 
 	if (mTextureId != -1)
 	{
+		glBindTexture(GL_TEXTURE_2D, mTextureId);
 		glUniform1i(mEnableTextureLocation, 1);
 		// Set the sampler texture unit to 0
 		glUniform1i(mSamplerLocation, 0);
