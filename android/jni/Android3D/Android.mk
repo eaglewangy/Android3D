@@ -20,7 +20,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
 $(info $(LOCAL_PATH))
 LOCAL_STATIC_LIBRARIES := png jpeg
 LOCAL_LDLIBS    := -llog -lGLESv2 -landroid -lEGL -lz
-LOCAL_CFLAGS := -DANDROID_NDK -Werror -D GL_GLEXT_PROTOTYPES 
+LOCAL_CFLAGS := -DANDROID_NDK -Werror 
 LOCAL_SRC_FILES := \
         $(subst $(LOCAL_PATH)/,, \
         $(wildcard $(LOCAL_PATH)/../../../src/*.cpp)) 
