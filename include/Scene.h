@@ -23,6 +23,7 @@
 
 #include "Camera.h"
 #include "Image.h"
+#include "Font.h"
 
 #include <glm/glm.hpp> //vec3, vec4, ivec4, mat4
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective
@@ -65,6 +66,7 @@ public:
 
     void addMesh(Mesh* mesh);
     void addImage(Image* image, int x, int y, DrawAnchor anchor = CENTER);
+    void addFont(Font* font) { mFonts.push_back(font);}
     int getWidth() {return mWidth;}
     int getHeight() {return mHeight;}
 
@@ -88,6 +90,7 @@ private:
 
     std::vector<Mesh*> mMeshes;
     std::vector<ImageArg> mImages;
+    std::vector<Font*> mFonts;
 };
 
 } //end namespace

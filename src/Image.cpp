@@ -71,7 +71,7 @@ jpeg_error_exit (j_common_ptr cinfo)
   longjmp(err->setjmp_buffer, 1);
 }
 
-GLfloat gVertex[] =
+static GLfloat gVertex[] =
 {
 		-1.0f, -1.0f,
 		1.0f, -1.0f,
@@ -79,13 +79,13 @@ GLfloat gVertex[] =
 		-1.0f, 1.0f,
 };
 
-GLushort gVertexIndex[] =
+static GLushort gVertexIndex[] =
 {
 		0, 1, 2,
 		0, 2, 3
 };
 
-GLfloat gTexture[] =
+static GLfloat gTexture[] =
 {
 		0.0f, 0.0f,
 		1.0f, 0.0f,
@@ -255,7 +255,6 @@ void Image::initGlCmds(int x, int y, DrawAnchor anchor)
 		mModelMatrix = glm::translate(mModelMatrix, glm::vec3(glCoord[0], glCoord[1], 0));
 		break;
 	case CENTER:
-		break;
 	default:
 		screenCoord[0] = x;
 		screenCoord[1] = y;

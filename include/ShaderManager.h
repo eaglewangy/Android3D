@@ -33,7 +33,8 @@ namespace android3d
 class ShaderManager
 {
 public:
-	ShaderManager(std::string vertexFile, std::string framentFile);
+	/**/
+	ShaderManager(std::string vertexSource, std::string framentSource, bool fromFile = true);
 	GLuint getVertexShader() {return mVetexShader;}
 	GLuint getFragmentShader() {return mFragmentShader;}
 	GLuint getProgram() {return mProgram;}
@@ -44,8 +45,8 @@ private:
 	GLuint mVetexShader;
 	GLuint mFragmentShader;
 	GLuint mProgram;
-	std::string mVertexFile;
-	std::string mFragmentFile;
+	//std::string mVertexFile;
+	//std::string mFragmentFile;
 
 	static std::string ROOT_PATH;
 };

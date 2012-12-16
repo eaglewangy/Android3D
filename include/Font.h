@@ -22,6 +22,9 @@
 #ifndef FONT_H_
 #define FONT_H_
 
+#include "android3d.h"
+#include "ShaderManager.h"
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -35,10 +38,29 @@ class Font
 public:
 	Font(std::string fontFile);
 	bool initFont(int size);
+	void initGlCmds();
 	void drawString();
+	void renderText(const char *text, float x, float y, float sx, float sy);
+	~Font();
 
 private:
-	std::string mFontFile;
+	std::string    mFontFile;
+	FT_Face        mFace;
+	ShaderManager* mShaderManager;
+	GLuint         mHudMVPMatrixLocation;
+	glm::mat4      mHudMVPMatrix;
+
+	bool           mGLHasInitialized;
+
+	GLuint         mVetextLocation;
+	GLuint         mVertexVBO;
+	GLuint         mTextureId;
+	GLuint         mTextureVBO;
+	GLuint         mTextureLocation;
+	GLuint         mSamplerLocation;
+	GLuint         mColorLocation;
+
+	GLuint* mTextureData;
 }; //end Font
 
 } //end namespace

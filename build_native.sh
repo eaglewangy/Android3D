@@ -23,6 +23,9 @@ mv libjpeg-android/ libjpeg/
 
 #get freetype
 git clone https://github.com/cdave1/freetype2-android.git
+mv freetype2-android/src/raster/raster.c  freetype2-android/src/raster/raster.c_
+mv freetype2-android/src/sfnt/ttsbit0.c  freetype2-android/src/sfnt/ttsbit0.c_
+mv freetype2-android/src/smooth/smooth.c  freetype2-android/src/smooth/smooth.c_
 
 popd
 

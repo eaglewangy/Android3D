@@ -28,18 +28,26 @@ namespace android3d
 {
 std::string ShaderManager::ROOT_PATH = Scene::ROOT_PATH;
 
-ShaderManager::ShaderManager(std::string vertexFile, std::string framentFile) :
+ShaderManager::ShaderManager(std::string vertexSource, std::string framentSource, bool fromFile) :
 mVetexShader(0),
 mFragmentShader(0),
 mProgram(0)
 {
-	mVertexFile = ROOT_PATH + vertexFile;
-	mFragmentFile = ROOT_PATH + framentFile;
+	if (fromFile)
+	{
+		std::string vertexFile = ROOT_PATH + vertexSource;
+		std::string fragmentFile = ROOT_PATH + framentSource;
 
-	std::string vertexShader, fragmentShader;
-	Utils::readFile(mVertexFile, vertexShader);
-	Utils::readFile(mFragmentFile, fragmentShader);
-	mProgram = createProgram(vertexShader.c_str(), fragmentShader.c_str());
+		std::string vertexShader, fragmentShader;
+		Utils::readFile(vertexFile, vertexShader);
+		Utils::readFile(fragmentFile, fragmentShader);
+		mProgram = createProgram(vertexShader.c_str(), fragmentShader.c_str());
+	}
+	else
+	{
+		mProgram = createProgram(vertexSource.c_str(), framentSource.c_str());
+	}
+
 }
 
 ShaderManager::~ShaderManager()

@@ -67,6 +67,11 @@ Scene::~Scene()
     	delete mImages[i].image;
     	mImages[i].image = NULL;
     }
+    for (int i = 0; i < mFonts.size(); ++i)
+    {
+    	delete mFonts[i];
+    	mFonts[i] = NULL;
+    }
 }
 
 void Scene::release()
@@ -115,6 +120,10 @@ void Scene::drawFrame()
     for (int i = 0; i < mImages.size(); ++i)
     {
     	mImages[i].image->drawImage(mImages[i].x, mImages[i].y, mImages[i].anchor);
+    }
+    for (int i = 0; i < mFonts.size(); ++i)
+    {
+    	mFonts[i]->drawString();
     }
 
     /*glUseProgram(mShaderProgram);

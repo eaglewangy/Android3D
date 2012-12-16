@@ -26,6 +26,7 @@
 #include "android3d_jni.h"
 #include "Scene.h"
 #include "Mesh.h"
+#include "Font.h"
 
 static android3d::Scene* gScene = NULL;
 void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject obj, jint width, jint height)
@@ -85,6 +86,14 @@ void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject ob
 	//texturePath = android3d::Scene::ROOT_PATH + "3d.png";
 	android3d::Image* image1 = new android3d::Image(texturePath);
 	gScene->addImage(image1, 0, 0, android3d::BOTTOM_RIGHT);
+
+	texturePath = android3d::Scene::ROOT_PATH + "logo.png";
+	android3d::Image* image2 = new android3d::Image(texturePath);
+	gScene->addImage(image2, 120, 120);
+
+	std::string fontFile = android3d::Scene::ROOT_PATH + "LiberationSans-Bold.ttf";
+	android3d::Font* font = new android3d::Font(fontFile);
+	gScene->addFont(font);
 }
 
 void JNICALL Java_com_peony_android3d_Android3DLib_step(JNIEnv* jenv, jobject obj)
