@@ -17,9 +17,12 @@ git clone https://github.com/eaglewangy/libjpeg-android.git
 mkdir libpng
 cp libpng-android/jni/*.c libpng/
 cp libpng-android/jni/*.h libpng/
-rm -rf libpng-android/
+#rm -rf libpng-android/
 
 mv libjpeg-android/ libjpeg/
+
+#get freetype
+git clone https://github.com/cdave1/freetype2-android.git
 
 popd
 
