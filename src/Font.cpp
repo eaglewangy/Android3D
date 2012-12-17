@@ -50,19 +50,27 @@ static const char* fragmentSource = {
 };
 
 static GLfloat gVertex[] = {
-		-0.5, 0.5,
-		-0.5, 0.5,
-		0.5, 0.5,
-		0.5, 0.5,
+		-1.0f, -1.0f,
+		1.0f, -1.0f,
+		-1.0f,  1.0f,
+		1.0f,  1.0f,
 };
 
 static GLfloat gTexture[] =
 {
 		0.0f, 0.0f,
 		1.0f, 0.0f,
-		1.0f, 1.0f,
 		0.0f, 1.0f,
+		1.0f, 1.0f,
 };
+
+/*static GLfloat gTexture[] =
+{
+		0.0f, (float)6/(float)8,
+		1/(float)16, (float)6/(float)8,
+		1/(float)16, (float)7/(float)8,
+		0.0f, (float)7/(float)8,
+};*/
 
 Font::Font(std::string fontFile) :
 mFontFile(fontFile),
@@ -101,8 +109,10 @@ bool Font::initFont(int size)
 		LOGE("Failed to open %s", mFontFile.c_str());
 		return false;
 	}
+	FT_Select_Charmap(mFace, ft_encoding_unicode);
 	/*Set font size.*/
 	FT_Set_Pixel_Sizes(mFace, 0, size);
+	LOGI("Freetype font init...");
 	return true;
 }
 
@@ -121,10 +131,40 @@ void Font::initGlCmds()
 	mVetextLocation = glGetAttribLocation(program, "a_position");
 	mTextureLocation = glGetAttribLocation(program, "a_texCoord");
 	mSamplerLocation = glGetUniformLocation(program, "s_texture");
+	mColorLocation = glGetUniformLocation(program, "u_color");
 
 	glGenBuffers(1, &mVertexVBO);
 	// Bind the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO);
+
+	int glyph_index = FT_Get_Char_Index(mFace, 'X');
+
+	LOGE("glyph index: %d", glyph_index);
+	if (FT_Load_Glyph(
+			mFace,          /* handle to face object */
+	            glyph_index,   /* glyph index           */
+	            FT_LOAD_RENDER ))
+	{
+		LOGE("Could not load character 'X'\n");
+	}
+	/*if(FT_Load_Char(mFace, 'Z', FT_LOAD_RENDER)) {
+		LOGE("Could not load character 'X'\n");
+		return ;
+	}*/
+	FT_GlyphSlot g = mFace->glyph;
+	float sx = 2.0 / Scene::getInstance()->getWidth();
+	float sy = 2.0 / Scene::getInstance()->getHeight();
+	float x2 = 0.1 + g->bitmap_left * sx;
+	float y2 = -0.1 - g->bitmap_top * sy;
+	float w = g->bitmap.width * sx;
+	float h = g->bitmap.rows * sy;
+
+	GLfloat box[] = {
+			x2,     -y2 ,
+			x2 + w, -y2 ,
+			x2,     -y2 - h,
+			x2 + w, -y2 - h,
+	};
 	// Set the buffer's data
 	glBufferData(GL_ARRAY_BUFFER, sizeof(gVertex), gVertex, GL_STATIC_DRAW);
 	// Unbind the VBO
@@ -140,30 +180,37 @@ void Font::initGlCmds()
 
 	glGenTextures(1, &mTextureId);
 	// Set the filtering mode
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Bind the texture
-	//glActiveTexture(GL_TEXTURE0);
-	int TEX_SIZE = 128;
-	// Creates the data as a 32bits integer array (8bits per component)
-	mTextureData = new GLuint[TEX_SIZE*TEX_SIZE];
-	for (int i=0; i<TEX_SIZE; i++)
-		for (int j=0; j<TEX_SIZE; j++)
-		{
-			// Fills the data with a fancy pattern
-			GLuint col = (255<<24) + ((255-j*2)<<16) + ((255-i)<<8) + (255-i*2);
-			if ( ((i*j)/8) % 2 ) col = (GLuint) (255<<24) + (255<<16) + (0<<8) + (255);
-			mTextureData[j*TEX_SIZE+i] = col;
-		}
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureData);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Bind the texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, mTextureId);
+
+	glTexImage2D(
+	      GL_TEXTURE_2D,
+	      0,
+	      GL_ALPHA,
+	      g->bitmap.width,
+	      g->bitmap.rows,
+	      0,
+	      GL_ALPHA,
+	      GL_UNSIGNED_BYTE,
+	      g->bitmap.buffer
+	    );
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureData);
+	//delete[] mTextureData;
 	float sceneWidth = Scene::getInstance()->getWidth();
 	float sceneHeight = Scene::getInstance()->getHeight();
-	float a = 128 / sceneWidth;
-	float b = 128 / sceneHeight;
+	float a = g->bitmap.width / sceneWidth;
+	float b = g->bitmap.rows / sceneHeight;
 
 	glm::mat4 mModelMatrix = glm::mat4(1.0);
-	mModelMatrix = glm::translate(mModelMatrix, glm::vec3(1, 2, 0));
+	mModelMatrix = glm::translate(mModelMatrix, glm::vec3(0.5, 0.5, 0));
 	mModelMatrix = glm::scale(mModelMatrix, glm::vec3(a, b, 0));
 	Scene::getInstance()->getCamera()->updateHudMVP(128, 128);
 	mHudMVPMatrix = Scene::getInstance()->getCamera()->getHudMVP() * mModelMatrix;
@@ -177,6 +224,12 @@ void Font::drawString()
 		initGlCmds();
 
 	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat black[4] = {0, 0, 0, 1};
+	glUniform4fv(mColorLocation, 1, black);
 
 	glUseProgram(mShaderManager->getProgram());
 	// Bind the VBO
@@ -188,7 +241,6 @@ void Font::drawString()
 	// Set the sampler texture unit to 0
 	glUniform1i(mSamplerLocation, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
-
 	glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, NULL);
 	glEnableVertexAttribArray(mTextureLocation);
 
