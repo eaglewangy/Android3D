@@ -67,6 +67,12 @@ enum DrawAnchor
     CENTER,
 };
 
+typedef struct {
+    GLsizei width;
+    GLsizei height;
+    GLint   type;
+} Texture;
+
 typedef struct
 {
     GLubyte red;

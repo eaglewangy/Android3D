@@ -26,7 +26,7 @@
 #include "android3d_jni.h"
 #include "Scene.h"
 #include "Mesh.h"
-#include "Font.h"
+#include "AtlasFont.h"
 
 static android3d::Scene* gScene = NULL;
 void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject obj, jint width, jint height)
@@ -87,8 +87,8 @@ void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject ob
 	android3d::Image* image1 = new android3d::Image(texturePath);
 	gScene->addImage(image1, 0, 0, android3d::BOTTOM_RIGHT);
 
-	std::string fontFile = android3d::Scene::ROOT_PATH + "ariali.ttf";
-	android3d::Font* font = new android3d::Font(fontFile);
+	//std::string fontFile = android3d::Scene::ROOT_PATH + "ariali.ttf";
+	android3d::AtlasFont* font = new android3d::AtlasFont();
 	gScene->addFont(font);
 }
 

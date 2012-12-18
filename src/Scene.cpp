@@ -123,7 +123,7 @@ void Scene::drawFrame()
     }
     for (int i = 0; i < mFonts.size(); ++i)
     {
-    	mFonts[i]->drawString();
+    	mFonts[i]->drawString("0", 300, 100);
     }
 
     /*glUseProgram(mShaderProgram);
