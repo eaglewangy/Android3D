@@ -20,5 +20,5 @@ Use Adnroid NDK in eclipse
 
  ->Add, the variable name is: NDK_ROOT, Value: (your NDK root path, for example:/usr/eaglewangy/android-ndk-r8b)
  
- <img src=http://s12.sinaimg.cn/large/6453bedegd12ec30916fb&690" alt="Snapshort" height="300" width="240">
+ <img src=http://s12.sinaimg.cn/large/6453bedegd12ec30916fb&690" alt="Snapshort" height="360" width="240">
  
