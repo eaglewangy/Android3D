@@ -123,24 +123,8 @@ void Scene::drawFrame()
     }
     for (int i = 0; i < mFonts.size(); ++i)
     {
-    	mFonts[i]->drawString("0", 300, 100);
+    	mFonts[i]->drawString("@123abcABC:!`~[\\]^_{|}");
     }
-
-    /*glUseProgram(mShaderProgram);
-    //checkGlError("glUseProgram");
-    glVertexAttribPointer(positionHandle, 3, GL_FLOAT, GL_FALSE, 0, vertices);
-    //checkGlError("glVertexAttribPointer");
-    glEnableVertexAttribArray(positionHandle);
-    //checkGlError("glEnableVertexAttribArray");
-
-    // Create a rotation for the triangle
-    clock_t time = clock() / (CLOCKS_PER_SEC / 1000);
-    time = time % 4000L;
-    float angle = 0.060f * ((int) time);
-    mModelMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-    glUniformMatrix4fv(mMVPMatrixLocation, 1, GL_FALSE, glm::value_ptr(mCamera->getMVP() * mModelMatrix));
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);*/
 }
 
 void Scene::addMesh(Mesh* mesh)

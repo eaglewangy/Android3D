@@ -46,9 +46,10 @@ public:
 	inline int getWidth() {return mWidth;}
 	inline int getHeight() {return mHeight;}
 	inline bool hasAlpha() {return mHasAlpha;}
+	void setPosition(int x, int y, DrawAnchor anchor = CENTER);
 	void deleteData();
 
-	void drawString(const char* str, int x, int y, DrawAnchor anchor = CENTER);
+	void drawString(const char* str);
 
 private:
 	std::string    mName;
@@ -66,15 +67,20 @@ private:
 
 	GLuint         mHudMVPMatrixLocation;
 	glm::mat4      mHudMVPMatrix;
+	glm::mat4      mModelMatrix;
 	GLuint         mVetextLocation;
 	GLuint         mVertexVBO;
 	ShaderManager* mShaderManager;
 
+	GLfloat        mFontWidth;
+	GLfloat        mFontHeight;
+	int            mCoodX;
+	int            mCoodY;
+
     std::map<char, std::pair<int, int> > mCharMap;
 
     void initCharMap();
-    void renderText(const char* str, int x, int y);
-	void initGlCmds(int x, int y, DrawAnchor anchor);
+	void initGlCmds();
 	/**
 	 * buffer uses to store image data
 	 */

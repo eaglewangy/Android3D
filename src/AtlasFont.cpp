@@ -42,53 +42,10 @@ namespace android3d
 #define CHAR_SIZE 16
 #define ROW_COUNT 8.0
 #define COLUMN_COUNT 16.0
-
-static GLfloat gVertex[] =
-{
-		-1.0f, -1.0f,
-		1.0f, -1.0f,
-		-1.0f,  1.0f,
-		1.0f,  1.0f,
-};
-
-static GLfloat gVertex1[] =
-{
-		-0.1f, 0.0f,
-		0.0f, 0.0f,
-		-0.1f,  0.1f,
-		0.0f,  0.1f,
-};
-
-static GLfloat gVertex2[] =
-{
-		0.0f, 0.0f,
-		0.1f, 0.0f,
-		0.0f,  0.1f,
-		0.1f,  0.1f,
-};
-
-/*static GLfloat gTexture[] =
-{
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-};*/
-
-static GLfloat gTexture[] =
-{
-		4/COLUMN_COUNT, 6/ROW_COUNT,
-		5/COLUMN_COUNT, 6/ROW_COUNT,
-		4/COLUMN_COUNT, 7/ROW_COUNT,
-		5/COLUMN_COUNT, 7/ROW_COUNT,
-};
-static GLfloat gTexture1[] =
-{
-		0/COLUMN_COUNT, 6/ROW_COUNT,
-		1/COLUMN_COUNT, 6/ROW_COUNT,
-		0/COLUMN_COUNT, 7/ROW_COUNT,
-		1/COLUMN_COUNT, 7/ROW_COUNT,
-};
+#define FILLCHARMAP(map, pair, ch, left, bottom) \
+	pair.first = left; \
+	pair.second = bottom; \
+	map[ch] = pair;
 
 //bmp file offset
 #define BMP_TORASTER_OFFSET	10
@@ -102,6 +59,10 @@ AtlasFont::AtlasFont() :
 mData(NULL),
 mWidth(0),
 mHeight(0),
+mFontWidth(-1),
+mFontHeight(-1),
+mCoodX(20),
+mCoodY(20),
 mPixelFormat(0),
 mHasAlpha(true),
 mGLHasInitialized(false),
@@ -141,7 +102,13 @@ void AtlasFont::loadTexture(std::string fileName)
     load_bmp();
 }
 
-void AtlasFont::initGlCmds(int x, int y, DrawAnchor anchor)
+void AtlasFont::setPosition(int x, int y, DrawAnchor anchor)
+{
+	mCoodX = x;
+	mCoodY = y;
+}
+
+void AtlasFont::initGlCmds()
 {
 	mShaderManager = new ShaderManager("texture.vsh", "texture.fsh");
 	GLuint program = mShaderManager->getProgram();
@@ -160,19 +127,7 @@ void AtlasFont::initGlCmds(int x, int y, DrawAnchor anchor)
 	 * mVertextVBO[1] store elements indices.
 	 */
 	glGenBuffers(1, &mVertexVBO);
-	/*// Bind the VBO
-	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO);
-	// Set the buffer's data
-	glBufferData(GL_ARRAY_BUFFER, sizeof(gVertex), gVertex, GL_STATIC_DRAW);
-	// Unbind the VBO
-	glBindBuffer(GL_ARRAY_BUFFER, 0);*/
-
 	glGenBuffers(1, &mTextureVBO);
-	/*// Bind the VBO
-	glBindBuffer(GL_ARRAY_BUFFER, mTextureVBO);
-	// Unbind the VBO
-	glBindBuffer(GL_ARRAY_BUFFER, 0);*/
-
 	glGenTextures(1, &mTextureId);
 	// Set the filtering mode
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -182,34 +137,31 @@ void AtlasFont::initGlCmds(int x, int y, DrawAnchor anchor)
 	glBindTexture(GL_TEXTURE_2D, mTextureId);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mData);
+	deleteData();
 
-	//deleteData();
-
-	mWidth = mHeight = 16;
 	float sceneWidth = Scene::getInstance()->getWidth();
 	float sceneHeight = Scene::getInstance()->getHeight();
 	int screenCoord[2];
 	float glCoord[2];
 	glm::mat4 mModelMatrix = glm::mat4(1.0);
 
-	screenCoord[0] = x;
-	screenCoord[1] = y;
+	screenCoord[0] = mCoodX;
+	screenCoord[1] = mCoodY;
 	Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
 	mModelMatrix = glm::translate(mModelMatrix, glm::vec3(glCoord[0], glCoord[1], 0));
 
-	float a = mWidth / sceneWidth;
-	float b = mHeight / sceneHeight;
-	//mModelMatrix = glm::scale(mModelMatrix, glm::vec3(a, b, 0));
+	mModelMatrix = glm::scale(mModelMatrix, glm::vec3(2, 2, 0));
 	Scene::getInstance()->getCamera()->updateHudMVP(mWidth, mHeight);
 	mHudMVPMatrix = Scene::getInstance()->getCamera()->getHudMVP() * mModelMatrix;
-
+	mFontWidth = 2.0f * CHAR_SIZE / sceneWidth;
+	mFontHeight = mFontWidth * sceneWidth/sceneHeight;
 	mGLHasInitialized = true;
 }
 
-void AtlasFont::drawString(const char* str, int x, int y, DrawAnchor anchor)
+void AtlasFont::drawString(const char* str)
 {
 	if (!mGLHasInitialized)
-		initGlCmds(x, y, anchor);
+		initGlCmds();
 
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
@@ -225,8 +177,9 @@ void AtlasFont::drawString(const char* str, int x, int y, DrawAnchor anchor)
 
 	std::pair<int, int> leftBottom;
 	std::map<char, std::pair<int, int> >::iterator iter;
-	int screenCoord[2];
-	float glCoord[2];
+	GLfloat x_center = mFontWidth/2;
+	GLfloat y_center = mFontHeight / 2;
+	GLfloat x2 = 0.0;
     for (int i = 0; i < strlen(str); ++i)
     {
     	iter = mCharMap.find(str[i]);
@@ -234,54 +187,25 @@ void AtlasFont::drawString(const char* str, int x, int y, DrawAnchor anchor)
     		continue;
     	leftBottom = iter->second;
 
-    	int size = 300;
-    	screenCoord[0] = x;
-    	screenCoord[1] = y + size;
-    	Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
-    	float x0 = glCoord[0];
-    	float y0 = glCoord[1];
-
-    	screenCoord[0] = x + size;
-    	screenCoord[1] = y + size;
-    	Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
-    	float x1 = glCoord[0];
-    	float y1 = glCoord[1];
-
-    	screenCoord[0] = x;
-    	screenCoord[1] = y;
-    	Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
-    	float x2 = glCoord[0];
-    	float y2 = glCoord[1];
-
-    	screenCoord[0] = x + size;
-    	screenCoord[1] = y;
-    	Utils::ScreenCoordsToGLCoords(screenCoord, glCoord);
-    	float x3 = glCoord[0];
-    	float y3 = glCoord[1];
-    	//LOGE("%lf, %lf", x1, y1);
     	GLfloat box[] = {
-    			x0, y0,
-    			x1, y1,
-    			x2, y2,
-    			x3, y3,
+    			x2 - x_center,   -y_center,
+    			x_center + x2,   -y_center,
+    			x2 - x_center,   y_center,
+    			x_center + x2,   y_center,
     	};
 
-    	LOGE("box: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf", x0, y0, x1, y1, x2, y2, x3, y3);
     	GLfloat texture[] = {
-    			leftBottom.first/COLUMN_COUNT,     leftBottom.second/ROW_COUNT,
+    			leftBottom.first/COLUMN_COUNT,       leftBottom.second/ROW_COUNT,
     			(leftBottom.first + 1)/COLUMN_COUNT, leftBottom.second/ROW_COUNT,
-    			leftBottom.first/COLUMN_COUNT,     (leftBottom.second + 1)/ROW_COUNT,
+    			leftBottom.first/COLUMN_COUNT,       (leftBottom.second + 1)/ROW_COUNT,
     			(leftBottom.first + 1)/COLUMN_COUNT, (leftBottom.second + 1)/ROW_COUNT,
     	};
-    	LOGE("tex: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf", texture[0], texture[1], texture[2], texture[3],
-    			texture[4], texture[5], texture[6], texture[7]);
-    	glVertexAttribPointer(mVetextLocation, 2, GL_FLOAT, GL_FALSE, 0, gVertex1);
+    	glVertexAttribPointer(mVetextLocation, 2, GL_FLOAT, GL_FALSE, 0, box);
     	glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, texture);
     	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    	x2 += mFontWidth;
     }
-	/*glVertexAttribPointer(mVetextLocation, 2, GL_FLOAT, GL_FALSE, 0, gVertex1);
-	glVertexAttribPointer(mTextureLocation, 2, GL_FLOAT, false, 0, gTexture1);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);*/
 }
 
 void AtlasFont::load_bmp()
@@ -457,11 +381,105 @@ unsigned char* AtlasFont::getData()
 
 void AtlasFont::initCharMap()
 {
-	char ch = '0';
 	std::pair<int, int> leftBottom;
-	leftBottom.first = 0;
-	leftBottom.second = 6;
-	mCharMap[ch] = leftBottom;
+	/* number 0-9 */
+	FILLCHARMAP(mCharMap, leftBottom, '0', 0, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '1', 1, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '2', 2, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '3', 3, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '4', 4, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '5', 5, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '6', 6, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '7', 7, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '8', 8, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '9', 9, 6);
+
+	/* letter A-Z a-z*/
+	FILLCHARMAP(mCharMap, leftBottom, 'A', 1,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'B', 2,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'C', 3,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'D', 4,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'E', 5,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'F', 6,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'G', 7,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'H', 8,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'I', 9,  5);
+	FILLCHARMAP(mCharMap, leftBottom, 'J', 10, 5);
+	FILLCHARMAP(mCharMap, leftBottom, 'K', 11, 5);
+	FILLCHARMAP(mCharMap, leftBottom, 'L', 12, 5);
+	FILLCHARMAP(mCharMap, leftBottom, 'M', 13, 5);
+	FILLCHARMAP(mCharMap, leftBottom, 'N', 14, 5);
+	FILLCHARMAP(mCharMap, leftBottom, 'O', 15, 5);
+	FILLCHARMAP(mCharMap, leftBottom, 'P', 0,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'Q', 1,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'R', 2,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'S', 3,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'T', 4,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'U', 5,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'V', 6,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'W', 7,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'X', 8,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'Y', 9,  4);
+	FILLCHARMAP(mCharMap, leftBottom, 'Z', 10, 4);
+	FILLCHARMAP(mCharMap, leftBottom, 'a', 1,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'b', 2,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'c', 3,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'd', 4,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'e', 5,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'f', 6,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'g', 7,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'h', 8,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'i', 9,  3);
+	FILLCHARMAP(mCharMap, leftBottom, 'j', 10, 3);
+	FILLCHARMAP(mCharMap, leftBottom, 'k', 11, 3);
+	FILLCHARMAP(mCharMap, leftBottom, 'l', 12, 3);
+	FILLCHARMAP(mCharMap, leftBottom, 'm', 13, 3);
+	FILLCHARMAP(mCharMap, leftBottom, 'n', 14, 3);
+	FILLCHARMAP(mCharMap, leftBottom, 'o', 15, 3);
+	FILLCHARMAP(mCharMap, leftBottom, 'p', 0,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'q', 1,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'r', 2,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 's', 3,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 't', 4,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'u', 5,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'v', 6,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'w', 7,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'x', 8,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'y', 9,  2);
+	FILLCHARMAP(mCharMap, leftBottom, 'z', 10, 2);
+
+	/* symbols */
+	FILLCHARMAP(mCharMap, leftBottom, '!',   1,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '"',   2,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '#',   3,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '$',   4,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '%',   5,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '&',   6,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '\'',  7,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '(',   8,  7);
+	FILLCHARMAP(mCharMap, leftBottom, ')',   9,  7);
+	FILLCHARMAP(mCharMap, leftBottom, '+',   11, 7);
+	FILLCHARMAP(mCharMap, leftBottom, ',',   12, 7);
+	FILLCHARMAP(mCharMap, leftBottom, '-',   13, 7);
+	FILLCHARMAP(mCharMap, leftBottom, '.',   14, 7);
+	FILLCHARMAP(mCharMap, leftBottom, '/',   15, 7);
+	FILLCHARMAP(mCharMap, leftBottom, ':',   10, 6);
+	FILLCHARMAP(mCharMap, leftBottom, ';',   11, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '<',   12, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '=',   13, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '>',   14, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '?',   15, 6);
+	FILLCHARMAP(mCharMap, leftBottom, '@',   0,  5);
+	FILLCHARMAP(mCharMap, leftBottom, '[',   11, 4);
+	FILLCHARMAP(mCharMap, leftBottom, '\\',  12, 4);
+	FILLCHARMAP(mCharMap, leftBottom, ']',   13, 4);
+	FILLCHARMAP(mCharMap, leftBottom, '^',   14, 4);
+	FILLCHARMAP(mCharMap, leftBottom, '_',   15, 4);
+	FILLCHARMAP(mCharMap, leftBottom, '`',   0,  3);
+	FILLCHARMAP(mCharMap, leftBottom, '{',   11, 2);
+	FILLCHARMAP(mCharMap, leftBottom, '|',   12, 2);
+	FILLCHARMAP(mCharMap, leftBottom, '}',   13, 2);
+	FILLCHARMAP(mCharMap, leftBottom, '~',   14, 2);
 }
 
 } //end namespace
