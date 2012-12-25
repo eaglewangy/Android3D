@@ -22,9 +22,7 @@
 #ifndef ATLASFONT_H_
 #define ATLASFONT_H_
 
-#include "android3d.h"
-#include "ShaderManager.h"
-
+#include "Font.h"
 #include <string>
 #include <map>
 #include <GLES2/gl2.h>
@@ -37,10 +35,10 @@ struct CharCoord
 	GLfloat coord[8];
 };
 
-class AtlasFont
+class AtlasFont : public Font
 {
 public:
-	AtlasFont();
+	AtlasFont(std::string fontFile);
 	virtual ~AtlasFont();
 	unsigned char* getData();
 	inline int getWidth() {return mWidth;}

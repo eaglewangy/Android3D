@@ -55,7 +55,8 @@ namespace android3d
 #define BMP_COLOR_OFFSET	54
 #define fill4B(a)    (( 4 - ( (a) % 4 ) ) & 0x03)
 
-AtlasFont::AtlasFont() :
+AtlasFont::AtlasFont(std::string fontFile) :
+mName(fontFile),
 mData(NULL),
 mWidth(0),
 mHeight(0),
@@ -73,9 +74,9 @@ mSamplerLocation(-1),
 mShaderManager(NULL),
 mVertexVBO(-1),
 mTextureId(-1),
-mTextureVBO(0)
+mTextureVBO(0),
+Font(fontFile)
 {
-	mName = android3d::Scene::ROOT_PATH + "font.bmp";
 	loadTexture(mName);
 	initCharMap();
 }

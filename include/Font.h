@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  *  File:       Font.h
- *  Created on: Dec 15, 2012
+ *  Created on: Dec 22, 2012
  *  Author:     wyylling
  *  Email:      wyylling@gmail.com
  */
@@ -25,11 +25,6 @@
 #include "android3d.h"
 #include "ShaderManager.h"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-#include <string>
-
 namespace android3d
 {
 
@@ -37,31 +32,20 @@ class Font
 {
 public:
 	Font(std::string fontFile);
-	bool initFont(int size);
-	void initGlCmds();
-	void drawString();
-	void renderText(const char *text, float x, float y, float sx, float sy);
-	~Font();
+	virtual ~Font();
+	virtual void drawString(const char* str);
+	virtual void setPosition(int x, int y, DrawAnchor anchor = CENTER){}
 
-private:
-	std::string    mFontFile;
-	FT_Face        mFace;
-	ShaderManager* mShaderManager;
+protected:
+	std::string    mName;
 	GLuint         mHudMVPMatrixLocation;
 	glm::mat4      mHudMVPMatrix;
+	glm::mat4      mModelMatrix;
+	ShaderManager* mShaderManager;
 
-	bool           mGLHasInitialized;
-
-	GLuint         mVetextLocation;
-	GLuint         mVertexVBO;
-	GLuint         mTextureId;
-	GLuint         mTextureVBO;
-	GLuint         mTextureLocation;
-	GLuint         mSamplerLocation;
-	GLuint         mColorLocation;
-
-	GLuint* mTextureData;
-}; //end Font
+	void initGlCmds();
+};
 
 } //end namespace
+
 #endif /* FONT_H_ */

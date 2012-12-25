@@ -27,6 +27,7 @@
 #include "Scene.h"
 #include "Mesh.h"
 #include "AtlasFont.h"
+#include "FreeTypeFont.h"
 
 static android3d::Scene* gScene = NULL;
 void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject obj, jint width, jint height)
@@ -86,9 +87,14 @@ void JNICALL Java_com_peony_android3d_Android3DLib_init(JNIEnv* jenv, jobject ob
 	android3d::Image* image1 = new android3d::Image(texturePath);
 	gScene->addImage(image1, 0, 0, android3d::BOTTOM_RIGHT);
 
-	android3d::AtlasFont* font = new android3d::AtlasFont();
+	texturePath = android3d::Scene::ROOT_PATH + "font.bmp";
+	android3d::AtlasFont* font = new android3d::AtlasFont(texturePath);
 	font->setPosition(20, 100);
 	gScene->addFont(font);
+
+	texturePath = android3d::Scene::ROOT_PATH + "freesans.ttf";
+	android3d::FreeTypeFont* freeTypeFont = new android3d::FreeTypeFont(texturePath);
+	gScene->addFont(freeTypeFont);
 }
 
 void JNICALL Java_com_peony_android3d_Android3DLib_step(JNIEnv* jenv, jobject obj)
